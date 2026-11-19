@@ -118,3 +118,6 @@ test "parse_anthropic_event - unknown type" {
   let event = parse_anthropic_event(data)
   @debug.debug_inspect(event is None, content="true")
 }
+
+///|
+using @anthropic {parse_anthropic_event}

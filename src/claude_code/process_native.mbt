@@ -1,5 +1,5 @@
 ///|
-pub async fn exec_async(
+async fn collect_output(
   program : String,
   args : Array[String],
 ) -> (Int32, String, String) {

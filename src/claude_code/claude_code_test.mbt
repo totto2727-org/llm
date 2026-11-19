@@ -79,3 +79,6 @@ test "parse_claude_code_line - result without usage" {
     _ => fail("expected MessageEnd")
   }
 }
+
+///|
+using @claude_code {parse_claude_code_line}

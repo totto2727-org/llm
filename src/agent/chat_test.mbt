@@ -72,3 +72,33 @@ test "add_assistant_message supports optional tool_calls and reasoning" {
   assert_true(!chat_json_has_field(out2[0], "tool_calls"))
   assert_true(!chat_json_has_field(out2[0], "reasoning_content"))
 }
+
+///|
+using @agent {
+  trait ChatProvider,
+  type CronSchedule,
+  type CronService,
+  type LoopResponse,
+  type LoopToolCall,
+  type RuntimeToolContext,
+  type RuntimeTurnRequest,
+  type SessionManager,
+  type SubagentQueue,
+  add_assistant_message,
+  add_tool_result,
+  callback_chat_provider,
+  compute_next_run,
+  cron_tool_def,
+  format_cron_list,
+  format_cron_remove_result,
+  format_message_tool_result,
+  llm_chat_provider,
+  message_tool_def,
+  resolve_cron_tool,
+  resolve_message_tool,
+  resolve_spawn_tool,
+  run_agent_loop,
+  run_agent_loop_with_provider,
+  run_runtime_turn,
+  spawn_tool_def,
+}
