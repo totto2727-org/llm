@@ -8,7 +8,7 @@ import {
 }
 
 // Values
-pub fn list_openrouter_models() -> Array[ModelInfo]
+pub async fn list_openrouter_models() -> Array[ModelInfo]
 
 pub fn parse_openai_event(String) -> @llm.StreamEvent?
 

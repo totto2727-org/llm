@@ -11,7 +11,7 @@ fn chat_test_get_string_field(obj : Json, key : String) -> String {
 }
 
 ///|
-test "run_json_chat_loop returns direct response without tools" {
+async test "run_json_chat_loop returns direct response without tools" {
   let calls = Ref(0)
   let result = run_json_chat_loop(
     [{ "role": "user", "content": "hello" }],
@@ -29,7 +29,7 @@ test "run_json_chat_loop returns direct response without tools" {
 }
 
 ///|
-test "run_json_chat_loop executes tool call and appends tool result messages" {
+async test "run_json_chat_loop executes tool call and appends tool result messages" {
   let calls = Ref(0)
   let seen_tool_result = Ref(false)
   let result = run_json_chat_loop(
@@ -69,7 +69,7 @@ test "run_json_chat_loop executes tool call and appends tool result messages" {
 }
 
 ///|
-test "run_json_chat_loop returns fallback on max iterations" {
+async test "run_json_chat_loop returns fallback on max iterations" {
   let result = run_json_chat_loop(
     [{ "role": "user", "content": "loop" }],
     [],

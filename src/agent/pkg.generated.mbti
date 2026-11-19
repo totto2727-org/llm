@@ -12,7 +12,7 @@ pub fn add_assistant_message(Array[@json.Json], String?, Array[@json.Json]?, Str
 
 pub fn add_tool_result(Array[@json.Json], String, String, String) -> Array[@json.Json]
 
-pub fn callback_chat_provider((Array[@json.Json], Array[@json.Json], String) -> LoopResponse) -> &ChatProvider
+pub fn callback_chat_provider(async (Array[@json.Json], Array[@json.Json], String) -> LoopResponse) -> &ChatProvider
 
 pub fn compute_next_run(CronSchedule, Int32) -> Int32?
 
@@ -36,11 +36,11 @@ pub fn resolve_message_tool(@json.Json, RuntimeToolContext) -> Result[MessageToo
 
 pub fn resolve_spawn_tool(@json.Json, RuntimeToolContext) -> Result[SpawnToolPlan, String]
 
-pub fn run_agent_loop(Array[@json.Json], Array[@json.Json], String, Int32, (Array[@json.Json], Array[@json.Json], String) -> LoopResponse, (String, @json.Json) -> String, fallback_content? : String) -> AgentTurnResult
+pub async fn run_agent_loop(Array[@json.Json], Array[@json.Json], String, Int32, async (Array[@json.Json], Array[@json.Json], String) -> LoopResponse, (String, @json.Json) -> String, fallback_content? : String) -> AgentTurnResult
 
-pub fn run_agent_loop_with_provider(Array[@json.Json], Array[@json.Json], &ChatProvider, String, Int32, (String, @json.Json) -> String, fallback_content? : String) -> AgentTurnResult
+pub async fn run_agent_loop_with_provider(Array[@json.Json], Array[@json.Json], &ChatProvider, String, Int32, (String, @json.Json) -> String, fallback_content? : String) -> AgentTurnResult
 
-pub fn run_runtime_turn(SessionManager, RuntimeTurnRequest, (Array[@json.Json], String, String, String) -> String) -> RuntimeTurnResult
+pub async fn run_runtime_turn(SessionManager, RuntimeTurnRequest, async (Array[@json.Json], String, String, String) -> String) -> RuntimeTurnResult
 
 pub fn spawn_tool_def() -> @tools.ToolDef
 
@@ -238,5 +238,5 @@ pub struct SubagentTask {
 
 // Traits
 pub(open) trait ChatProvider {
-  fn chat(Self, Array[@json.Json], Array[@json.Json], String) -> LoopResponse
+  async fn chat(Self, Array[@json.Json], Array[@json.Json], String) -> LoopResponse
 }

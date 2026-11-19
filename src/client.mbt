@@ -2,7 +2,7 @@
 /// Provider is the core trait for LLM providers.
 pub(open) trait Provider {
   /// Send a streaming request to the LLM.
-  fn stream(Self, Array[Message], Array[ToolDef], StreamHandler) -> Unit
+  async fn stream(Self, Array[Message], Array[ToolDef], StreamHandler) -> Unit
   /// Get the provider name.
   fn name(Self) -> String
 }
@@ -19,7 +19,7 @@ pub fn BoxedProvider::new(provider : &Provider) -> BoxedProvider {
 }
 
 ///|
-pub fn BoxedProvider::stream(
+pub async fn BoxedProvider::stream(
   self : BoxedProvider,
   messages : Array[Message],
   tools : Array[ToolDef],
@@ -72,7 +72,7 @@ pub fn ProviderConfig::new(
 
 ///|
 /// Collect all text from a streaming provider call into a single string.
-pub fn collect_text(
+pub async fn collect_text(
   provider : &Provider,
   messages : Array[Message],
   tools~ : Array[ToolDef] = [],
@@ -101,7 +101,7 @@ pub(all) struct CollectResult {
 
 ///|
 /// Collect full response including text, tool calls, finish reason, and usage.
-pub fn collect(
+pub async fn collect(
   provider : &Provider,
   messages : Array[Message],
   tools~ : Array[ToolDef] = [],

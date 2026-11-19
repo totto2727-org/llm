@@ -41,11 +41,11 @@ pub(all) struct JsonChatLoopResult {
 }
 
 ///|
-pub fn run_json_chat_loop(
+pub async fn run_json_chat_loop(
   messages : Array[Json],
   tools : Array[Json],
   max_iterations : Int32,
-  chat : (Array[Json], Array[Json]) -> JsonChatResponse,
+  chat : async (Array[Json], Array[Json]) -> JsonChatResponse,
   execute_tool : (String, Json) -> String,
   fallback_content~ : String = "I've completed processing but have no response to give.",
 ) -> JsonChatLoopResult {

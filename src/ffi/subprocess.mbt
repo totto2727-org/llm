@@ -5,24 +5,27 @@ pub fn exec_sync(command : String, timeout_ms : Int32) -> String {
 }
 
 ///|
-/// Execute a command with streaming output (line by line).
-/// Uses run_command for synchronous execution, then splits output by lines.
-pub fn exec_stream(
+/// Run a command without blocking the scheduler, then deliver its stdout lines.
+pub async fn exec_stream(
   command : String,
-  args_json : String,
+  args : Array[String],
   on_line : (String) -> Unit,
   on_done : () -> Unit,
   on_error : (String) -> Unit,
 ) -> Unit {
-  let result = run_command(command, args_json)
-  if result.has_prefix("ERROR:") {
-    on_error(result)
+  let (code, stdout, stderr) = exec_async(command, args) catch {
+    error => {
+      on_error(@debug.to_string(error))
+      return
+    }
+  }
+  if code != 0 {
+    on_error("exit code \{code}: \{stderr}")
     return
   }
-  let lines = split_lines(result)
-  for line in lines {
-    if !line.trim(chars=" \t\r\n").to_owned().is_empty() {
-      on_line(line)
+  for line in stdout.split("\n") {
+    if !line.trim(chars=" \t\r\n").is_empty() {
+      on_line(line.to_owned())
     }
   }
   on_done()

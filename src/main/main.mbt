@@ -27,7 +27,7 @@ impl @llm.Provider for MockProvider with fn name(_self) -> String {
 }
 
 ///|
-fn main {
+async fn main {
   println("=== Mock SSE Stream Debug ===")
   println("")
   // Test 1: Simple text streaming
@@ -52,7 +52,7 @@ fn main {
 }
 
 ///|
-fn test_text_stream() -> Unit raise {
+async fn test_text_stream() -> Unit {
   let provider : MockProvider = {
     responses: [
       [
@@ -94,7 +94,7 @@ fn test_text_stream() -> Unit raise {
 }
 
 ///|
-fn test_tool_call_stream() -> Unit raise {
+async fn test_tool_call_stream() -> Unit {
   let tool_input : Json = {
     "location": ToJson::to_json("Tokyo"),
     "unit": ToJson::to_json("celsius"),
@@ -154,7 +154,7 @@ fn test_tool_call_stream() -> Unit raise {
 }
 
 ///|
-fn test_agent_loop() -> Unit raise {
+async fn test_agent_loop() -> Unit {
   let provider : MockProvider = {
     responses: [
       // Step 0: model calls get_weather tool

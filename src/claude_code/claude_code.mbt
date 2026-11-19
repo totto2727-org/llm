@@ -106,11 +106,10 @@ pub impl @llm.Provider for ClaudeCodeProvider with fn stream(
     args.push("--model")
     args.push(self.model)
   }
-  let args_json = Json::array(args.map(ToJson::to_json))
   (handler.on_event)(@llm.StreamEvent::MessageStart)
   @ffi.exec_stream(
     "claude",
-    args_json.stringify(),
+    args,
     fn(line) {
       match parse_claude_code_line(line) {
         Some(event) => (handler.on_event)(event)

@@ -170,7 +170,6 @@ pub impl @llm.Provider for AnthropicProvider with fn stream(
   let active_tools : Map[String, (String, StringBuilder)] = Map([])
   @ffi.fetch_sse(
     url,
-    "POST",
     headers.stringify(),
     body.stringify(),
     self.config.timeout_sec,

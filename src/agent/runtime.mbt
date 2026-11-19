@@ -41,10 +41,10 @@ pub struct RuntimeTurnResult {
 }
 
 ///|
-pub fn run_runtime_turn(
+pub async fn run_runtime_turn(
   sessions : SessionManager,
   request : RuntimeTurnRequest,
-  run_loop : (Array[Json], String, String, String) -> String,
+  run_loop : async (Array[Json], String, String, String) -> String,
 ) -> RuntimeTurnResult {
   let session = sessions.get_or_create(request.session_key)
   let reply = run_loop(

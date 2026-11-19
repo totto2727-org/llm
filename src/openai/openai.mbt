@@ -383,7 +383,6 @@ pub impl @llm.Provider for OpenAIProvider with fn stream(
   let pending_end : Ref[@llm.StreamEvent?] = { val: None, }
   @ffi.fetch_sse(
     url,
-    "POST",
     headers.stringify(),
     body.stringify(),
     self.config.timeout_sec,
@@ -521,45 +520,39 @@ pub impl Show for ModelInfo with fn output(self, logger) {
 
 ///|
 /// Fetch model list from OpenRouter API.
-pub fn list_openrouter_models() -> Array[ModelInfo] {
+pub async fn list_openrouter_models() -> Array[ModelInfo] {
   let models : Array[ModelInfo] = []
   let headers : Map[String, Json] = Map([])
   headers["Accept"] = ToJson::to_json("application/json")
   let headers_json = Json::object(headers).stringify()
-  @ffi.fetch(
-    "https://openrouter.ai/api/v1/models",
-    "GET",
-    headers_json,
-    "",
-    30,
-    fn(body) {
-      let json = @json.parse(body) catch { _ => return }
-      let data = match @llm.json_get_array(json, "data") {
-        Some(arr) => arr
-        None => return
+  let (status, body) = @ffi.fetch_async(
+    "https://openrouter.ai/api/v1/models", "GET", headers_json, "", 30,
+  ) catch {
+    _ => return []
+  }
+  guard status >= 200 && status < 300 else { return [] }
+  let json = @json.parse(body) catch { _ => return [] }
+  if @llm.json_get_array(json, "data") is Some(data) {
+    for item in data {
+      let id = get_str(item, "id", "")
+      let name = get_str(item, "name", "")
+      let context_length = match @llm.json_get_int(item, "context_length") {
+        Some(n) => n
+        None => 0
       }
-      for item in data {
-        let id = get_str(item, "id", "")
-        let name = get_str(item, "name", "")
-        let context_length = match @llm.json_get_int(item, "context_length") {
-          Some(n) => n
-          None => 0
-        }
-        let (pricing_prompt, pricing_completion) = match
-          @llm.json_get_object(item, "pricing") {
-          Some(p) => (get_str(p, "prompt", "0"), get_str(p, "completion", "0"))
-          None => ("0", "0")
-        }
-        models.push({
-          id,
-          name,
-          context_length,
-          pricing_prompt,
-          pricing_completion,
-        })
+      let (pricing_prompt, pricing_completion) = match
+        @llm.json_get_object(item, "pricing") {
+        Some(p) => (get_str(p, "prompt", "0"), get_str(p, "completion", "0"))
+        None => ("0", "0")
       }
-    },
-    fn(_error) {  },
-  )
+      models.push({
+        id,
+        name,
+        context_length,
+        pricing_prompt,
+        pricing_completion,
+      })
+    }
+  }
   models
 }

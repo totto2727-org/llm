@@ -15,7 +15,7 @@ fn runtime_core_json_get_string(obj : Json, key : String) -> String? {
 }
 
 ///|
-test "run_runtime_turn stores user/assistant history for user inbound" {
+async test "run_runtime_turn stores user/assistant history for user inbound" {
   let sessions = SessionManager::new()
   let seen_history_len = Ref(-1)
   let req = RuntimeTurnRequest::new(
@@ -53,7 +53,7 @@ test "run_runtime_turn stores user/assistant history for user inbound" {
 }
 
 ///|
-test "run_runtime_turn prefixes system sender and drops outbound metadata" {
+async test "run_runtime_turn prefixes system sender and drops outbound metadata" {
   let sessions = SessionManager::new()
   let req = RuntimeTurnRequest::new(
     SystemInbound,

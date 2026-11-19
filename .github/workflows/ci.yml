@@ -22,7 +22,11 @@ jobs:
         run: |
           moon check --deny-warn --target js
           moon check --deny-warn --target native
+          moon check --deny-warn --target wasm
       - name: Moon test
         run: |
           moon test --target js
           moon test --target native
+          moon test --target wasm
+      - name: Test HTTP streaming on JavaScript, native, and Wasm1
+        run: node tests/http-smoke.cjs

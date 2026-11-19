@@ -8,9 +8,9 @@ import {
 }
 
 // Values
-pub fn collect(&Provider, Array[Message], tools? : Array[@tools.ToolDef]) -> CollectResult
+pub async fn collect(&Provider, Array[Message], tools? : Array[@tools.ToolDef]) -> CollectResult
 
-pub fn collect_text(&Provider, Array[Message], tools? : Array[@tools.ToolDef]) -> String
+pub async fn collect_text(&Provider, Array[Message], tools? : Array[@tools.ToolDef]) -> String
 
 pub let default_anthropic_model : String
 
@@ -30,11 +30,11 @@ pub fn json_get_string(@json.Json, String) -> String?
 
 pub fn parse_skill_frontmatter(String) -> (Map[String, String]?, String)
 
-pub fn run_agent(BoxedProvider, @tools.ToolRegistry, Array[Message], StopCondition, (AgentEvent) -> Unit) -> Unit
+pub async fn run_agent(BoxedProvider, @tools.ToolRegistry, Array[Message], StopCondition, (AgentEvent) -> Unit) -> Unit
 
-pub fn run_agent_cancellable(BoxedProvider, @tools.ToolRegistry, Array[Message], StopCondition, () -> Bool, (AgentEvent) -> Unit) -> Unit
+pub async fn run_agent_cancellable(BoxedProvider, @tools.ToolRegistry, Array[Message], StopCondition, () -> Bool, (AgentEvent) -> Unit) -> Unit
 
-pub fn run_json_chat_loop(Array[@json.Json], Array[@json.Json], Int32, (Array[@json.Json], Array[@json.Json]) -> JsonChatResponse, (String, @json.Json) -> String, fallback_content? : String) -> JsonChatLoopResult
+pub async fn run_json_chat_loop(Array[@json.Json], Array[@json.Json], Int32, async (Array[@json.Json], Array[@json.Json]) -> JsonChatResponse, (String, @json.Json) -> String, fallback_content? : String) -> JsonChatLoopResult
 
 pub fn skill_metadata_description(Map[String, String]?, String) -> String
 
@@ -68,7 +68,7 @@ pub struct BoxedProvider {
 }
 pub fn BoxedProvider::name(Self) -> String
 pub fn BoxedProvider::new(&Provider) -> Self
-pub fn BoxedProvider::stream(Self, Array[Message], Array[@tools.ToolDef], StreamHandler) -> Unit
+pub async fn BoxedProvider::stream(Self, Array[Message], Array[@tools.ToolDef], StreamHandler) -> Unit
 
 pub(all) struct CollectResult {
   text : String
@@ -237,6 +237,6 @@ pub using @tools {type ToolRegistry}
 
 // Traits
 pub(open) trait Provider {
-  fn stream(Self, Array[Message], Array[@tools.ToolDef], StreamHandler) -> Unit
+  async fn stream(Self, Array[Message], Array[@tools.ToolDef], StreamHandler) -> Unit
   fn name(Self) -> String
 }

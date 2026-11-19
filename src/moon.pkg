@@ -3,3 +3,11 @@ import {
   "moonbitlang/core/json",
   "totto2727/llm/tools",
 }
+
+import {
+  "moonbitlang/async",
+} for "test"
+
+import {
+  "moonbitlang/async",
+} for "wbtest"

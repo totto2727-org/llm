@@ -11,6 +11,8 @@ source = "src"
 
 preferred_target = "js"
 
+supported_targets = "js+native+wasm"
+
 readme = "README.mbt.md"
 
 repository = "https://github.com/totto2727-org/llm"

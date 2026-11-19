@@ -41,7 +41,7 @@ impl @llm.Provider for CaptureProvider with fn name(_self) -> String {
 }
 
 ///|
-test "llm_chat_provider converts messages and tools" {
+async test "llm_chat_provider converts messages and tools" {
   let provider : CaptureProvider = {
     received_messages: [],
     received_tools: [],
@@ -106,7 +106,7 @@ test "llm_chat_provider converts messages and tools" {
 }
 
 ///|
-test "llm_chat_provider maps tool calls from llm collect" {
+async test "llm_chat_provider maps tool calls from llm collect" {
   let provider : CaptureProvider = {
     received_messages: [],
     received_tools: [],

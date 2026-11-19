@@ -17,7 +17,7 @@ pub(all) enum AgentEvent {
 
 ///|
 /// run_agent executes a tool loop with the given provider and tools.
-pub fn run_agent(
+pub async fn run_agent(
   provider : BoxedProvider,
   registry : ToolRegistry,
   messages : Array[Message],

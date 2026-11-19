@@ -1,7 +1,7 @@
 ///| Cancellable version of run_agent
 
 ///|
-pub fn run_agent_cancellable(
+pub async fn run_agent_cancellable(
   provider : BoxedProvider,
   registry : ToolRegistry,
   messages : Array[Message],

@@ -43,7 +43,7 @@ fn parse_openai_collect_text_response(response_text : String) -> String {
 }
 
 ///|
-/// Cross-target async non-streaming completion backed by `mizchi/x/http`.
+/// Cross-target async non-streaming completion backed by standard async HTTP.
 /// Returns an empty string for transport, HTTP, or response parsing errors.
 pub async fn OpenAIProvider::collect_text(
   self : OpenAIProvider,

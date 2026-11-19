@@ -1,5 +1,5 @@
 ///|
-test "agent - simple text response (no tools)" {
+async test "agent - simple text response (no tools)" {
   let provider : MockProvider = {
     responses: [
       [
@@ -36,7 +36,7 @@ test "agent - simple text response (no tools)" {
 }
 
 ///|
-test "agent - tool call loop" {
+async test "agent - tool call loop" {
   let provider : MockProvider = {
     responses: [
       // First response: tool call
@@ -91,7 +91,7 @@ test "agent - tool call loop" {
 }
 
 ///|
-test "agent - max steps" {
+async test "agent - max steps" {
   // Provider always returns tool calls, so agent should stop at max_steps
   let make_tool_response : () -> Array[StreamEvent] = fn() {
     [
@@ -130,7 +130,7 @@ test "agent - max steps" {
 }
 
 ///|
-test "collect_text - simple text" {
+async test "collect_text - simple text" {
   let provider : MockProvider = {
     responses: [
       [
@@ -153,7 +153,7 @@ test "collect_text - simple text" {
 }
 
 ///|
-test "collect - full response" {
+async test "collect - full response" {
   let provider : MockProvider = {
     responses: [
       [

@@ -1,5 +1,5 @@
 ///|
-test "cancellable agent stops on cancel" {
+async test "cancellable agent stops on cancel" {
   let make_tool_response : () -> Array[StreamEvent] = fn() {
     [
       MessageStart,
@@ -41,7 +41,7 @@ test "cancellable agent stops on cancel" {
 }
 
 ///|
-test "cancellable agent runs normally without cancel" {
+async test "cancellable agent runs normally without cancel" {
   let provider = MockProvider::new([
     [
       MessageStart,

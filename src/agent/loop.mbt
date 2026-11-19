@@ -34,17 +34,22 @@ pub fn LoopResponse::new(
 
 ///|
 pub(open) trait ChatProvider {
-  fn chat(Self, messages : Array[Json], tools : Array[Json], model : String) -> LoopResponse
+  async fn chat(
+    Self,
+    messages : Array[Json],
+    tools : Array[Json],
+    model : String,
+  ) -> LoopResponse
 }
 
 ///|
 priv struct CallbackChatProvider {
-  handler : (Array[Json], Array[Json], String) -> LoopResponse
+  handler : async (Array[Json], Array[Json], String) -> LoopResponse
 }
 
 ///|
 pub fn callback_chat_provider(
-  handler : (Array[Json], Array[Json], String) -> LoopResponse,
+  handler : async (Array[Json], Array[Json], String) -> LoopResponse,
 ) -> &ChatProvider {
   CallbackChatProvider::{ handler, }
 }
@@ -68,12 +73,12 @@ pub struct AgentTurnResult {
 }
 
 ///|
-pub fn run_agent_loop(
+pub async fn run_agent_loop(
   messages : Array[Json],
   tools : Array[Json],
   model : String,
   max_iterations : Int32,
-  chat : (Array[Json], Array[Json], String) -> LoopResponse,
+  chat : async (Array[Json], Array[Json], String) -> LoopResponse,
   execute_tool : (String, Json) -> String,
   fallback_content~ : String = "I've completed processing but have no response to give.",
 ) -> AgentTurnResult {
@@ -81,7 +86,7 @@ pub fn run_agent_loop(
     messages,
     tools,
     max_iterations,
-    fn(messages, tools) {
+    async fn(messages, tools) {
       let response = chat(messages, tools, model)
       loop_response_to_llm(response)
     },
@@ -96,7 +101,7 @@ pub fn run_agent_loop(
 }
 
 ///|
-pub fn run_agent_loop_with_provider(
+pub async fn run_agent_loop_with_provider(
   messages : Array[Json],
   tools : Array[Json],
   provider : &ChatProvider,
@@ -110,7 +115,7 @@ pub fn run_agent_loop_with_provider(
     tools,
     model,
     max_iterations,
-    fn(messages, tools, model) {
+    async fn(messages, tools, model) {
       (provider : &ChatProvider).chat(messages, tools, model)
     },
     execute_tool,
