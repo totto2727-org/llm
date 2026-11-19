@@ -1,9 +1,7 @@
 import {
+  "moonbitlang/async/http",
+  "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "totto2727/llm",
-  "totto2727/llm/ffi",
+  "totto2727/llm/internal/sse",
 }
-
-import {
-  "moonbitlang/core/debug",
-} for "test"

@@ -3,7 +3,6 @@ package "totto2727/llm/openai"
 
 import {
   "totto2727/llm",
-  "totto2727/llm/ffi",
   "totto2727/llm/tools",
 }
 
@@ -37,7 +36,6 @@ pub struct OpenAIProvider {
   endpoint : OpenAIEndpoint
 }
 pub async fn OpenAIProvider::collect_text(Self, Array[@llm.Message], tools? : Array[@tools.ToolDef]) -> String
-pub fn OpenAIProvider::collect_text_async(Self, Array[@llm.Message], tools? : Array[@tools.ToolDef]) -> @ffi.Promise[String]
 pub fn OpenAIProvider::new(String, endpoint? : OpenAIEndpoint, model? : String, max_tokens? : Int32, system_prompt? : String, base_url? : String, timeout_sec? : Int32, max_retries? : Int32) -> Self
 pub fn OpenAIProvider::new_compat(String, String, api_key? : String, max_tokens? : Int32, system_prompt? : String, timeout_sec? : Int32, max_retries? : Int32) -> Self
 pub impl @llm.Provider for OpenAIProvider
