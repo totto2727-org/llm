@@ -25,7 +25,7 @@ src/
   client.mbt         # Provider trait, BoxedProvider, ProviderConfig, collect_text, collect, truncate_messages
   agent.mbt          # run_agent, StopCondition, agent loop (pure MoonBit)
   config.mbt         # Default model constants
-  ffi/               # Minimal JS FFI (4 functions: get_env, js_fetch_sse, js_exec_sync, js_exec_stream)
+  internal/sse/      # Shared incremental SSE decoding over standard async HTTP
   anthropic/         # AnthropicProvider (SSE parse in pure MoonBit)
   openai/            # OpenAIProvider (OpenAI/OpenRouter/Ollama/Cloudflare AI/Custom), OpenAIProvider::new_compat
   claude_code/       # ClaudeCodeProvider (CLI subprocess)

@@ -16,6 +16,5 @@ Claude Code requires a host that can launch the installed `claude` executable an
 
 `Provider::stream`, `collect`, `collect_text`, and the agent loops are async and must be called from an async context.
 Provider trait implementations still use `impl Provider for Type with fn stream`; the trait supplies the async effect.
-The JavaScript Promise adapter delegates to the same async HTTP client.
 
 See [upstream differences](docs/upstream-differences.md) for the upstream revision, compatibility changes, and release procedure.

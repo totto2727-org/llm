@@ -27,12 +27,12 @@ pub fn AnthropicProvider::new(
 }
 
 ///|
-fn build_anthropic_headers(api_key : String) -> Json {
-  {
-    "Content-Type": ToJson::to_json("application/json"),
-    "x-api-key": ToJson::to_json(api_key),
-    "anthropic-version": ToJson::to_json("2023-06-01"),
-  }
+fn build_anthropic_headers(api_key : String) -> @http.Headers {
+  Map([
+    (@http.CaseInsensitiveString("Content-Type"), "application/json"),
+    (@http.CaseInsensitiveString("x-api-key"), api_key),
+    (@http.CaseInsensitiveString("anthropic-version"), "2023-06-01"),
+  ])
 }
 
 ///|
@@ -168,51 +168,48 @@ pub impl @llm.Provider for AnthropicProvider with fn stream(
     tools,
   )
   let active_tools : Map[String, (String, StringBuilder)] = Map([])
-  @ffi.fetch_sse(
-    url,
-    headers.stringify(),
-    body.stringify(),
-    self.config.timeout_sec,
-    fn(line) {
-      match parse_anthropic_event(line) {
-        Some(event) =>
-          match event {
-            @llm.StreamEvent::ToolCallStart(id~, name~) => {
-              active_tools[id] = (name, StringBuilder::StringBuilder())
-              (handler.on_event)(event)
-            }
-            @llm.StreamEvent::ToolCallDelta(input_delta~, ..) => {
-              for entry in active_tools.iter2() {
-                let (_tool_id, (_, buf)) = entry
-                buf.write_string(input_delta)
-                break
-              }
-              (handler.on_event)(event)
-            }
-            @llm.StreamEvent::MessageEnd(..) => {
-              for entry in active_tools.iter2() {
-                let (tool_id, (tool_name, buf)) = entry
-                let input_str = buf.to_string()
-                let input = @json.parse(input_str) catch { _ => Json::null() }
-                (handler.on_event)(
-                  @llm.StreamEvent::ToolCallEnd(
-                    id=tool_id,
-                    name=tool_name,
-                    input~,
-                  ),
-                )
-              }
-              active_tools.clear()
-              (handler.on_event)(event)
-            }
-            _ => (handler.on_event)(event)
+  @sse.post(url, headers, body.stringify(), self.config.timeout_sec, fn(line) {
+    match parse_anthropic_event(line) {
+      Some(event) =>
+        match event {
+          @llm.StreamEvent::ToolCallStart(id~, name~) => {
+            active_tools[id] = (name, StringBuilder::StringBuilder())
+            (handler.on_event)(event)
           }
-        None => ()
-      }
-    },
-    fn(error) { (handler.on_event)(@llm.StreamEvent::Error(error)) },
-    fn() {  },
-  )
+          @llm.StreamEvent::ToolCallDelta(input_delta~, ..) => {
+            for entry in active_tools.iter2() {
+              let (_tool_id, (_, buf)) = entry
+              buf.write_string(input_delta)
+              break
+            }
+            (handler.on_event)(event)
+          }
+          @llm.StreamEvent::MessageEnd(..) => {
+            for entry in active_tools.iter2() {
+              let (tool_id, (tool_name, buf)) = entry
+              let input_str = buf.to_string()
+              let input = @json.parse(input_str) catch { _ => Json::null() }
+              (handler.on_event)(
+                @llm.StreamEvent::ToolCallEnd(
+                  id=tool_id,
+                  name=tool_name,
+                  input~,
+                ),
+              )
+            }
+            active_tools.clear()
+            (handler.on_event)(event)
+          }
+          _ => (handler.on_event)(event)
+        }
+      None => ()
+    }
+  }) catch {
+    @sse.UnexpectedStatus(code) =>
+      (handler.on_event)(@llm.StreamEvent::Error("HTTP \{code}"))
+    error =>
+      (handler.on_event)(@llm.StreamEvent::Error(@debug.to_string(error)))
+  }
 }
 
 ///|

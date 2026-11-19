@@ -110,3 +110,6 @@ test "parse_openai_event - empty choices" {
   let event = parse_openai_event(data)
   @debug.debug_inspect(event is None, content="true")
 }
+
+///|
+using @openai {parse_openai_event}

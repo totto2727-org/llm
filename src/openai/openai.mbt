@@ -82,21 +82,27 @@ pub fn OpenAIProvider::new_compat(
 }
 
 ///|
-fn build_openai_headers(api_key : String, endpoint : OpenAIEndpoint) -> Json {
-  let headers : Map[String, Json] = Map([])
-  headers["Content-Type"] = ToJson::to_json("application/json")
+fn build_openai_headers(
+  api_key : String,
+  endpoint : OpenAIEndpoint,
+) -> @http.Headers {
+  let headers = Map([
+    (@http.CaseInsensitiveString("Content-Type"), "application/json"),
+  ])
   match endpoint {
     Ollama => ()
-    _ => headers["Authorization"] = ToJson::to_json("Bearer " + api_key)
+    _ =>
+      headers[@http.CaseInsensitiveString("Authorization")] = "Bearer " +
+        api_key
   }
   match endpoint {
     OpenRouter => {
-      headers["HTTP-Referer"] = ToJson::to_json("https://github.com/mizchi/llm")
-      headers["X-Title"] = ToJson::to_json("mizchi/llm")
+      headers[@http.CaseInsensitiveString("HTTP-Referer")] = "https://github.com/mizchi/llm"
+      headers[@http.CaseInsensitiveString("X-Title")] = "mizchi/llm"
     }
     _ => ()
   }
-  Json::object(headers)
+  headers
 }
 
 ///|
@@ -106,14 +112,15 @@ fn build_openai_body(
   system_prompt : String,
   messages : Array[@llm.Message],
   tools : Array[@llm.ToolDef],
+  stream~ : Bool,
 ) -> Json {
   let body : Map[String, Json] = Map([])
   body["model"] = ToJson::to_json(model)
   body["max_tokens"] = Json::number(max_tokens.to_double())
-  body["stream"] = Json::boolean(true)
-  let stream_options : Map[String, Json] = Map([])
-  stream_options["include_usage"] = Json::boolean(true)
-  body["stream_options"] = Json::object(stream_options)
+  body["stream"] = Json::boolean(stream)
+  if stream {
+    body["stream_options"] = { "include_usage": Json::boolean(true) }
+  }
   // Build messages array with system prompt
   let msgs : Array[Json] = []
   if !system_prompt.is_empty() {
@@ -376,115 +383,112 @@ pub impl @llm.Provider for OpenAIProvider with fn stream(
     self.config.system_prompt,
     messages,
     tools,
+    stream=true,
   )
   // Track tool calls for building ToolCallEnd events
   let active_tools : Map[String, (String, StringBuilder)] = Map([])
   // Hold pending MessageEnd to merge with a later usage-only chunk
   let pending_end : Ref[@llm.StreamEvent?] = { val: None, }
-  @ffi.fetch_sse(
-    url,
-    headers.stringify(),
-    body.stringify(),
-    self.config.timeout_sec,
-    fn(line) {
-      for event in apply_openai_tool_fragments(line, active_tools) {
-        (handler.on_event)(event)
-      }
-      match parse_openai_event(line) {
-        Some(event) =>
-          match event {
-            @llm.StreamEvent::ToolCallStart(..)
-            | @llm.StreamEvent::ToolCallDelta(..) => ()
-            @llm.StreamEvent::MessageEnd(
-              finish_reason=cur_reason,
-              usage=cur_usage,
-            ) =>
-              match pending_end.val {
-                Some(
-                  @llm.StreamEvent::MessageEnd(finish_reason=prev_reason, ..),
-                ) => {
-                  // This is the usage-only chunk; merge with pending
-                  for entry in active_tools.iter2() {
-                    let (tool_id, (tool_name, buf)) = entry
-                    let input_str = buf.to_string()
-                    let input = @json.parse(input_str) catch {
-                      _ => Json::null()
-                    }
-                    (handler.on_event)(
-                      @llm.StreamEvent::ToolCallEnd(
-                        id=tool_id,
-                        name=tool_name,
-                        input~,
-                      ),
-                    )
-                  }
-                  active_tools.clear()
-                  pending_end.val = None
+  @sse.post(url, headers, body.stringify(), self.config.timeout_sec, fn(line) {
+    for event in apply_openai_tool_fragments(line, active_tools) {
+      (handler.on_event)(event)
+    }
+    match parse_openai_event(line) {
+      Some(event) =>
+        match event {
+          @llm.StreamEvent::ToolCallStart(..)
+          | @llm.StreamEvent::ToolCallDelta(..) => ()
+          @llm.StreamEvent::MessageEnd(
+            finish_reason=cur_reason,
+            usage=cur_usage,
+          ) =>
+            match pending_end.val {
+              Some(@llm.StreamEvent::MessageEnd(finish_reason=prev_reason, ..)) => {
+                // This is the usage-only chunk; merge with pending
+                for entry in active_tools.iter2() {
+                  let (tool_id, (tool_name, buf)) = entry
+                  let input_str = buf.to_string()
+                  let input = @json.parse(input_str) catch { _ => Json::null() }
                   (handler.on_event)(
-                    @llm.StreamEvent::MessageEnd(
-                      finish_reason=prev_reason,
-                      usage=cur_usage,
+                    @llm.StreamEvent::ToolCallEnd(
+                      id=tool_id,
+                      name=tool_name,
+                      input~,
                     ),
                   )
                 }
-                _ =>
-                  // First MessageEnd (has finish_reason, may lack usage)
-                  match cur_usage {
-                    Some(_) => {
-                      // Already has usage, emit directly
-                      for entry in active_tools.iter2() {
-                        let (tool_id, (tool_name, buf)) = entry
-                        let input_str = buf.to_string()
-                        let input = @json.parse(input_str) catch {
-                          _ => Json::null()
-                        }
-                        (handler.on_event)(
-                          @llm.StreamEvent::ToolCallEnd(
-                            id=tool_id,
-                            name=tool_name,
-                            input~,
-                          ),
-                        )
+                active_tools.clear()
+                pending_end.val = None
+                (handler.on_event)(
+                  @llm.StreamEvent::MessageEnd(
+                    finish_reason=prev_reason,
+                    usage=cur_usage,
+                  ),
+                )
+              }
+              _ =>
+                // First MessageEnd (has finish_reason, may lack usage)
+                match cur_usage {
+                  Some(_) => {
+                    // Already has usage, emit directly
+                    for entry in active_tools.iter2() {
+                      let (tool_id, (tool_name, buf)) = entry
+                      let input_str = buf.to_string()
+                      let input = @json.parse(input_str) catch {
+                        _ => Json::null()
                       }
-                      active_tools.clear()
                       (handler.on_event)(
-                        @llm.StreamEvent::MessageEnd(
-                          finish_reason=cur_reason,
-                          usage=cur_usage,
+                        @llm.StreamEvent::ToolCallEnd(
+                          id=tool_id,
+                          name=tool_name,
+                          input~,
                         ),
                       )
                     }
-                    None =>
-                      // Hold it; usage chunk may follow
-                      pending_end.val = Some(event)
+                    active_tools.clear()
+                    (handler.on_event)(
+                      @llm.StreamEvent::MessageEnd(
+                        finish_reason=cur_reason,
+                        usage=cur_usage,
+                      ),
+                    )
                   }
-              }
-            _ => (handler.on_event)(event)
-          }
-        None => ()
-      }
-    },
-    fn(error) { (handler.on_event)(@llm.StreamEvent::Error(error)) },
-    fn() {
-      // Flush pending MessageEnd if usage chunk never arrived
-      match pending_end.val {
-        Some(evt) => {
-          for entry in active_tools.iter2() {
-            let (tool_id, (tool_name, buf)) = entry
-            let input_str = buf.to_string()
-            let input = @json.parse(input_str) catch { _ => Json::null() }
-            (handler.on_event)(
-              @llm.StreamEvent::ToolCallEnd(id=tool_id, name=tool_name, input~),
-            )
-          }
-          active_tools.clear()
-          pending_end.val = None
-          (handler.on_event)(evt)
+                  None =>
+                    // Hold it; usage chunk may follow
+                    pending_end.val = Some(event)
+                }
+            }
+          _ => (handler.on_event)(event)
         }
-        None => ()
+      None => ()
+    }
+  }) catch {
+    @sse.UnexpectedStatus(code) => {
+      (handler.on_event)(@llm.StreamEvent::Error("HTTP \{code}"))
+      return
+    }
+    error => {
+      (handler.on_event)(@llm.StreamEvent::Error(@debug.to_string(error)))
+      return
+    }
+  }
+  // Flush pending MessageEnd if usage chunk never arrived
+  match pending_end.val {
+    Some(evt) => {
+      for entry in active_tools.iter2() {
+        let (tool_id, (tool_name, buf)) = entry
+        let input_str = buf.to_string()
+        let input = @json.parse(input_str) catch { _ => Json::null() }
+        (handler.on_event)(
+          @llm.StreamEvent::ToolCallEnd(id=tool_id, name=tool_name, input~),
+        )
       }
-    },
-  )
+      active_tools.clear()
+      pending_end.val = None
+      (handler.on_event)(evt)
+    }
+    None => ()
+  }
 }
 
 ///|
@@ -522,16 +526,16 @@ pub impl Show for ModelInfo with fn output(self, logger) {
 /// Fetch model list from OpenRouter API.
 pub async fn list_openrouter_models() -> Array[ModelInfo] {
   let models : Array[ModelInfo] = []
-  let headers : Map[String, Json] = Map([])
-  headers["Accept"] = ToJson::to_json("application/json")
-  let headers_json = Json::object(headers).stringify()
-  let (status, body) = @ffi.fetch_async(
-    "https://openrouter.ai/api/v1/models", "GET", headers_json, "", 30,
-  ) catch {
+  let headers = Map([
+    (@http.CaseInsensitiveString("Accept"), "application/json"),
+  ])
+  let (response, body) = @async.with_timeout(30_000, async fn() {
+    @http.get("https://openrouter.ai/api/v1/models", headers~)
+  }) catch {
     _ => return []
   }
-  guard status >= 200 && status < 300 else { return [] }
-  let json = @json.parse(body) catch { _ => return [] }
+  guard response.code >= 200 && response.code < 300 else { return [] }
+  let json = @json.parse(body.text()) catch { _ => return [] }
   if @llm.json_get_array(json, "data") is Some(data) {
     for item in data {
       let id = get_str(item, "id", "")

@@ -1,7 +1,8 @@
 import {
+  "mizchi/x/process" @x_process,
+  "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "totto2727/llm",
-  "totto2727/llm/ffi",
 }
 
 import {
