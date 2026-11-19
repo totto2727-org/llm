@@ -2,34 +2,35 @@
 /// Cron service core logic extracted from nanobot.
 
 ///|
+#derive(Eq)
 pub enum CronScheduleKind {
   At
   Every
   Cron
-} derive(Eq)
+}
 
 ///|
 pub struct CronSchedule {
   kind : CronScheduleKind
-  at_ms : Int?
-  every_ms : Int?
+  at_ms : Int32?
+  every_ms : Int32?
   expr : String?
   tz : String?
 }
 
 ///|
-pub fn CronSchedule::at(at_ms : Int) -> CronSchedule {
-  { kind: At, at_ms: Some(at_ms), every_ms: None, expr: None, tz: None }
+pub fn CronSchedule::at(at_ms : Int32) -> CronSchedule {
+  { kind: At, at_ms: Some(at_ms), every_ms: None, expr: None, tz: None, }
 }
 
 ///|
-pub fn CronSchedule::every(every_ms : Int) -> CronSchedule {
-  { kind: Every, at_ms: None, every_ms: Some(every_ms), expr: None, tz: None }
+pub fn CronSchedule::every(every_ms : Int32) -> CronSchedule {
+  { kind: Every, at_ms: None, every_ms: Some(every_ms), expr: None, tz: None, }
 }
 
 ///|
-pub fn CronSchedule::cron(expr : String, tz? : String? = None) -> CronSchedule {
-  { kind: Cron, at_ms: None, every_ms: None, expr: Some(expr), tz }
+pub fn CronSchedule::cron(expr : String, tz~ : String? = None) -> CronSchedule {
+  { kind: Cron, at_ms: None, every_ms: None, expr: Some(expr), tz, }
 }
 
 ///|
@@ -44,24 +45,24 @@ pub struct CronPayload {
 ///|
 pub fn CronPayload::agent_turn(
   message : String,
-  deliver? : Bool = false,
-  channel? : String? = None,
-  to? : String? = None,
+  deliver~ : Bool = false,
+  channel~ : String? = None,
+  to~ : String? = None,
 ) -> CronPayload {
-  { kind: "agent_turn", message, deliver, channel, to }
+  { kind: "agent_turn", message, deliver, channel, to, }
 }
 
 ///|
 pub struct CronJobState {
-  mut next_run_at_ms : Int?
-  mut last_run_at_ms : Int?
+  mut next_run_at_ms : Int32?
+  mut last_run_at_ms : Int32?
   mut last_status : String?
   mut last_error : String?
 }
 
 ///|
-pub fn CronJobState::new(next_run_at_ms : Int?) -> CronJobState {
-  { next_run_at_ms, last_run_at_ms: None, last_status: None, last_error: None }
+pub fn CronJobState::new(next_run_at_ms : Int32?) -> CronJobState {
+  { next_run_at_ms, last_run_at_ms: None, last_status: None, last_error: None, }
 }
 
 ///|
@@ -72,13 +73,13 @@ pub struct CronJob {
   schedule : CronSchedule
   payload : CronPayload
   state : CronJobState
-  created_at_ms : Int
-  mut updated_at_ms : Int
+  created_at_ms : Int32
+  mut updated_at_ms : Int32
   delete_after_run : Bool
 }
 
 ///|
-pub fn compute_next_run(schedule : CronSchedule, now_ms : Int) -> Int? {
+pub fn compute_next_run(schedule : CronSchedule, now_ms : Int32) -> Int32? {
   match schedule.kind {
     At =>
       match schedule.at_ms {
@@ -102,22 +103,22 @@ pub fn compute_next_run(schedule : CronSchedule, now_ms : Int) -> Int? {
 ///|
 pub struct CronService {
   jobs : Array[CronJob]
-  clock : () -> Int
+  clock : () -> Int32
   mut on_job : ((CronJob) -> String?)?
-  mut id_counter : Int
+  mut id_counter : Int32
 }
 
 ///|
-fn cron_default_clock() -> Int {
+fn cron_default_clock() -> Int32 {
   0
 }
 
 ///|
 pub fn CronService::new(
-  clock? : () -> Int = cron_default_clock,
-  on_job? : ((CronJob) -> String?)? = None,
+  clock~ : () -> Int32 = cron_default_clock,
+  on_job~ : ((CronJob) -> String?)? = None,
 ) -> CronService {
-  { jobs: [], clock, on_job, id_counter: 0 }
+  { jobs: [], clock, on_job, id_counter: 0, }
 }
 
 ///|
@@ -131,7 +132,7 @@ pub fn CronService::set_on_job(
 ///|
 pub fn CronService::list_jobs(
   self : CronService,
-  include_disabled? : Bool = false,
+  include_disabled~ : Bool = false,
 ) -> Array[CronJob] {
   let out : Array[CronJob] = []
   for job in self.jobs {
@@ -152,10 +153,10 @@ pub fn CronService::add_job(
   name : String,
   schedule : CronSchedule,
   message : String,
-  deliver? : Bool = false,
-  channel? : String? = None,
-  to? : String? = None,
-  delete_after_run? : Bool = false,
+  deliver~ : Bool = false,
+  channel~ : String? = None,
+  to~ : String? = None,
+  delete_after_run~ : Bool = false,
 ) -> CronJob {
   self.id_counter = self.id_counter + 1
   let now = (self.clock)()
@@ -186,7 +187,7 @@ pub fn CronService::remove_job(self : CronService, job_id : String) -> Bool {
 pub fn CronService::enable_job(
   self : CronService,
   job_id : String,
-  enabled? : Bool = true,
+  enabled~ : Bool = true,
 ) -> CronJob? {
   for i in 0..<self.jobs.length() {
     if self.jobs[i].id == job_id {
@@ -210,7 +211,7 @@ pub fn CronService::enable_job(
 pub fn CronService::run_job(
   self : CronService,
   job_id : String,
-  force? : Bool = false,
+  force~ : Bool = false,
 ) -> Bool {
   for i in 0..<self.jobs.length() {
     if self.jobs[i].id == job_id {
@@ -225,7 +226,7 @@ pub fn CronService::run_job(
 }
 
 ///|
-pub fn CronService::run_due(self : CronService) -> Int {
+pub fn CronService::run_due(self : CronService) -> Int32 {
   let now = (self.clock)()
   let due_ids : Array[String] = []
   for job in self.jobs {
@@ -249,18 +250,18 @@ pub fn CronService::run_due(self : CronService) -> Int {
 ///|
 pub fn CronService::status(self : CronService) -> Map[String, Json] {
   let out : Map[String, Json] = Map([])
-  out["enabled"] = true.to_json()
-  out["jobs"] = self.jobs.length().to_json()
+  out["enabled"] = ToJson::to_json(true)
+  out["jobs"] = ToJson::to_json(self.jobs.length())
   out["next_wake_at_ms"] = match self.next_wake_at_ms() {
-    Some(v) => v.to_json()
+    Some(v) => ToJson::to_json(v)
     None => Json::null()
   }
   out
 }
 
 ///|
-fn CronService::next_wake_at_ms(self : CronService) -> Int? {
-  let mut min_next : Int? = None
+fn CronService::next_wake_at_ms(self : CronService) -> Int32? {
+  let mut min_next : Int32? = None
   for job in self.jobs {
     if !job.enabled {
       continue
@@ -283,7 +284,7 @@ fn CronService::next_wake_at_ms(self : CronService) -> Int? {
 }
 
 ///|
-fn CronService::execute_job_at_index(self : CronService, i : Int) -> Unit {
+fn CronService::execute_job_at_index(self : CronService, i : Int32) -> Unit {
   if i < 0 || i >= self.jobs.length() {
     return
   }
@@ -317,7 +318,7 @@ fn CronService::execute_job_at_index(self : CronService, i : Int) -> Unit {
 }
 
 ///|
-fn next_sort_key(next : Int?) -> Int {
+fn next_sort_key(next : Int32?) -> Int32 {
   match next {
     Some(v) => v
     None => 2147483647
@@ -325,7 +326,7 @@ fn next_sort_key(next : Int?) -> Int {
 }
 
 ///|
-fn compute_next_run_cron(expr : String?, now_ms : Int) -> Int? {
+fn compute_next_run_cron(expr : String?, now_ms : Int32) -> Int32? {
   let raw = match expr {
     Some(e) => e.trim().to_owned()
     None => return None

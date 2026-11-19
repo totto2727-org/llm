@@ -69,7 +69,7 @@ pub fn fetch_text_async(
   http_method : String,
   headers_json : String,
   body : String,
-  timeout_sec : Int,
+  timeout_sec : Int32,
 ) -> Promise[String] {
   js_fetch_text_async(url, http_method, headers_json, body, timeout_sec)
 }
@@ -80,7 +80,7 @@ extern "js" fn js_fetch_text_async(
   http_method : String,
   headers_json : String,
   body : String,
-  timeout_sec : Int,
+  timeout_sec : Int32,
 ) -> Promise[String] =
   #| (url, method, headersJson, body, timeoutSec) => {
   #|   return (async () => {

@@ -19,7 +19,7 @@
 pub fn OpenAIProvider::collect_text_async(
   self : OpenAIProvider,
   messages : Array[@llm.Message],
-  tools? : Array[@llm.ToolDef] = [],
+  tools~ : Array[@llm.ToolDef] = [],
 ) -> @ffi.Promise[String] {
   let path = match self.endpoint {
     Cloudflare(..) => "/run/" + self.config.model
@@ -48,7 +48,7 @@ extern "js" fn js_openai_collect_text_async(
   url : String,
   headers_json : String,
   body_json : String,
-  timeout_sec : Int,
+  timeout_sec : Int32,
 ) -> @ffi.Promise[String] =
   #| (url, headersJson, bodyJson, timeoutSec) => {
   #|   return (async () => {

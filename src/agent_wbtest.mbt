@@ -43,9 +43,7 @@ test "agent - tool call loop" {
       [
         MessageStart,
         ToolCallStart(id="call_1", name="greet"),
-        ToolCallEnd(id="call_1", name="greet", input={
-          "name": "Alice".to_json(),
-        }),
+        ToolCallEnd(id="call_1", name="greet", input={ "name": "Alice" }),
         MessageEnd(finish_reason=ToolUse, usage=None),
       ],
       // Second response: text after tool result
@@ -162,10 +160,10 @@ test "collect - full response" {
         MessageStart,
         TextDelta("Result: "),
         TextDelta("42"),
-        ToolCallEnd(id="call_1", name="calc", input={ "expr": "6*7".to_json() }),
+        ToolCallEnd(id="call_1", name="calc", input={ "expr": "6*7" }),
         MessageEnd(
           finish_reason=Stop,
-          usage=Some(Usage::{ input_tokens: 10, output_tokens: 5 }),
+          usage=Some(Usage::{ input_tokens: 10, output_tokens: 5, }),
         ),
       ],
     ],

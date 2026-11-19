@@ -2,10 +2,11 @@
 /// Route-free runtime turn core.
 
 ///|
+#derive(Eq)
 pub(all) enum RuntimeTurnKind {
   UserInbound
   SystemInbound
-} derive(Eq)
+}
 
 ///|
 pub struct RuntimeTurnRequest {
@@ -26,9 +27,9 @@ pub fn RuntimeTurnRequest::new(
   chat_id : String,
   sender_id : String,
   content : String,
-  metadata? : Map[String, Json] = Map([]),
+  metadata~ : Map[String, Json] = Map([]),
 ) -> RuntimeTurnRequest {
-  { kind, session_key, channel, chat_id, sender_id, content, metadata }
+  { kind, session_key, channel, chat_id, sender_id, content, metadata, }
 }
 
 ///|

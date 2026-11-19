@@ -47,9 +47,9 @@ pub fn skill_metadata_description(
 /// Evaluate whether a skill is runnable in the current environment.
 pub fn skill_metadata_is_available(
   metadata : Map[String, String]?,
-  bins? : Map[String, Bool] = Map([]),
-  env? : Map[String, String] = Map([]),
-  scope_key? : String = "nanobot",
+  bins~ : Map[String, Bool] = Map([]),
+  env~ : Map[String, String] = Map([]),
+  scope_key~ : String = "nanobot",
 ) -> Bool {
   match metadata {
     Some(meta) =>
@@ -66,9 +66,9 @@ pub fn skill_metadata_is_available(
 /// Collect missing requirement text (e.g. `CLI: tmux, ENV: OPENAI_API_KEY`).
 pub fn skill_metadata_missing_requirements(
   metadata : Map[String, String]?,
-  bins? : Map[String, Bool] = Map([]),
-  env? : Map[String, String] = Map([]),
-  scope_key? : String = "nanobot",
+  bins~ : Map[String, Bool] = Map([]),
+  env~ : Map[String, String] = Map([]),
+  scope_key~ : String = "nanobot",
 ) -> String {
   match metadata {
     Some(meta) =>
@@ -85,7 +85,7 @@ pub fn skill_metadata_missing_requirements(
 /// `always` may be specified either at root frontmatter or namespaced metadata.
 pub fn skill_metadata_is_always(
   metadata : Map[String, String]?,
-  scope_key? : String = "nanobot",
+  scope_key~ : String = "nanobot",
 ) -> Bool {
   match metadata {
     Some(meta) => {

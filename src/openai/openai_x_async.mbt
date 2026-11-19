@@ -2,13 +2,13 @@
 /// Build an OpenAI-compatible non-streaming completion request.
 fn build_openai_body_nonstream(
   model : String,
-  max_tokens : Int,
+  max_tokens : Int32,
   system_prompt : String,
   messages : Array[@llm.Message],
   tools : Array[@llm.ToolDef],
 ) -> Json {
   let body : Map[String, Json] = Map([])
-  body["model"] = model.to_json()
+  body["model"] = ToJson::to_json(model)
   body["max_tokens"] = Json::number(max_tokens.to_double())
   body["stream"] = Json::boolean(false)
   let msgs : Array[Json] = []
@@ -48,7 +48,7 @@ fn parse_openai_collect_text_response(response_text : String) -> String {
 pub async fn OpenAIProvider::collect_text(
   self : OpenAIProvider,
   messages : Array[@llm.Message],
-  tools? : Array[@llm.ToolDef] = [],
+  tools~ : Array[@llm.ToolDef] = [],
 ) -> String {
   let path = match self.endpoint {
     Cloudflare(..) => "/run/" + self.config.model

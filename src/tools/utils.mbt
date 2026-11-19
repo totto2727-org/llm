@@ -19,7 +19,7 @@ pub fn optional_string(obj : Json, key : String) -> String? {
 }
 
 ///|
-pub fn optional_int(obj : Json, key : String) -> Int? {
+pub fn optional_int(obj : Json, key : String) -> Int32? {
   match obj {
     Object(map) =>
       match map.get(key) {
@@ -31,7 +31,7 @@ pub fn optional_int(obj : Json, key : String) -> Int? {
 }
 
 ///|
-pub fn count_occurrences(text : String, needle : String) -> Int {
+pub fn count_occurrences(text : String, needle : String) -> Int32 {
   if needle.is_empty() {
     return 0
   }
@@ -51,7 +51,7 @@ pub fn count_occurrences(text : String, needle : String) -> Int {
 }
 
 ///|
-pub fn clamp(v : Int, min_v : Int, max_v : Int) -> Int {
+pub fn clamp(v : Int32, min_v : Int32, max_v : Int32) -> Int32 {
   if v < min_v {
     min_v
   } else if v > max_v {
@@ -140,18 +140,18 @@ pub fn validate_url(url : String) -> Result[Unit, String] {
 pub fn web_fetch_result_json(
   url : String,
   final_url : String,
-  status : Int,
+  status : Int32,
   extractor : String,
   text : String,
   truncated : Bool,
 ) -> String {
   Json::object({
-    "url": url.to_json(),
-    "finalUrl": final_url.to_json(),
-    "status": status.to_json(),
-    "extractor": extractor.to_json(),
-    "truncated": truncated.to_json(),
-    "length": text.length().to_json(),
-    "text": text.to_json(),
+    "url": ToJson::to_json(url),
+    "finalUrl": ToJson::to_json(final_url),
+    "status": ToJson::to_json(status),
+    "extractor": ToJson::to_json(extractor),
+    "truncated": ToJson::to_json(truncated),
+    "length": ToJson::to_json(text.length()),
+    "text": ToJson::to_json(text),
   }).stringify()
 }

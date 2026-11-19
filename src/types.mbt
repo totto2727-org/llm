@@ -1,11 +1,12 @@
 ///|
 /// Role represents the sender of a message in a conversation.
+#derive(Eq, @debug.Debug)
 pub(all) enum Role {
   User
   Assistant
   System
   Tool
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub impl Show for Role with fn output(self, logger) {
@@ -56,7 +57,7 @@ pub(all) struct Message {
 ///|
 /// Create a simple text message.
 pub fn Message::text(role : Role, text : String) -> Message {
-  { role, content: [Text(text)] }
+  { role, content: [Text(text)], }
 }
 
 ///|
@@ -80,7 +81,7 @@ pub fn Message::system(text : String) -> Message {
 ///|
 /// Get the text content of a message (concatenated from all Text blocks).
 pub fn Message::get_text(self : Message) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder::StringBuilder()
   for block in self.content {
     match block {
       Text(s) => buf.write_string(s)
@@ -100,13 +101,15 @@ pub(all) struct ToolCall {
 
 ///|
 /// Usage tracks token consumption.
+#derive(@debug.Debug)
 pub(all) struct Usage {
-  input_tokens : Int
-  output_tokens : Int
-} derive(@debug.Debug)
+  input_tokens : Int32
+  output_tokens : Int32
+}
 
 ///|
 /// FinishReason indicates why the model stopped generating.
+#derive(@debug.Debug)
 pub(all) enum FinishReason {
   Stop
   ToolUse
@@ -114,7 +117,7 @@ pub(all) enum FinishReason {
   ContentFilter
   Error
   Unknown(String)
-} derive(@debug.Debug)
+}
 
 ///|
 pub impl Show for FinishReason with fn output(self, logger) {

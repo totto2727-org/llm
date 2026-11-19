@@ -10,7 +10,7 @@ pub fn fetch_sse(
   http_method : String,
   headers_json : String,
   body : String,
-  timeout_sec : Int,
+  timeout_sec : Int32,
   on_line : (String) -> Unit,
   on_error : (String) -> Unit,
   on_done : () -> Unit,
@@ -44,7 +44,7 @@ pub fn fetch(
   http_method : String,
   headers_json : String,
   body : String,
-  timeout_sec : Int,
+  timeout_sec : Int32,
   on_result : (String) -> Unit,
   on_error : (String) -> Unit,
 ) -> Unit {
@@ -71,7 +71,7 @@ fn build_curl_args(
   http_method : String,
   headers_json : String,
   body : String,
-  timeout_sec : Int,
+  timeout_sec : Int32,
 ) -> Array[String] {
   let args : Array[String] = ["-sS", "-X", http_method, url]
   if timeout_sec > 0 {
@@ -104,7 +104,7 @@ fn build_curl_args(
 /// Split a string by newlines.
 fn split_lines(s : String) -> Array[String] {
   let result : Array[String] = []
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in s {
     if ch == '\n' {
       result.push(buf.to_string())
@@ -123,5 +123,5 @@ fn split_lines(s : String) -> Array[String] {
 ///|
 /// Serialize an array of strings to a JSON array string.
 fn serialize_string_array(arr : Array[String]) -> String {
-  Json::array(arr.map(fn(s) { s.to_json() })).stringify()
+  Json::array(arr.map(ToJson::to_json)).stringify()
 }

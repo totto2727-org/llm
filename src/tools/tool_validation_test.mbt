@@ -41,7 +41,7 @@ fn sample_schema() -> Json {
 
 ///|
 test "validate_tool_input checks required and type constraints" {
-  let errors = validate_tool_input({ "query": "x".to_json() }, sample_schema())
+  let errors = @tools.validate_tool_input({ "query": "x" }, sample_schema())
   assert_true(has_error(errors, "missing required count"))
   assert_true(has_error(errors, "query must be at least 2 chars"))
 }
@@ -49,11 +49,7 @@ test "validate_tool_input checks required and type constraints" {
 ///|
 test "validate_tool_input checks nested array/object constraints" {
   let errors = validate_tool_input(
-    {
-      "query": "ok".to_json(),
-      "count": (2).to_json(),
-      "meta": { "flags": Json::array([(1).to_json()]) },
-    },
+    { "query": "ok", "count": 2, "meta": { "flags": [1] } },
     sample_schema(),
   )
   assert_true(has_error(errors, "missing required meta.tag"))
@@ -64,9 +60,7 @@ test "validate_tool_input checks nested array/object constraints" {
 test "ToolRegistry::execute_validated rejects invalid input" {
   let registry = ToolRegistry::new()
   registry.register("echo", "echo input", sample_schema(), fn(_input) { "ok" })
-  let (result, is_error) = registry.execute_validated("echo", {
-    "query": "x".to_json(),
-  })
+  let (result, is_error) = registry.execute_validated("echo", { "query": "x" })
   assert_true(is_error)
   assert_true(result.contains("Invalid tool input"))
 }
@@ -76,8 +70,8 @@ test "ToolRegistry::execute_validated executes valid input" {
   let registry = ToolRegistry::new()
   registry.register("echo", "echo input", sample_schema(), fn(_input) { "ok" })
   let (result, is_error) = registry.execute_validated("echo", {
-    "query": "ok".to_json(),
-    "count": (2).to_json(),
+    "query": "ok",
+    "count": 2,
   })
   assert_eq(result, "ok")
   assert_true(!is_error)
@@ -85,7 +79,7 @@ test "ToolRegistry::execute_validated executes valid input" {
 
 ///|
 test "validate_params is an alias of validate_tool_input" {
-  let errors = validate_params({ "query": "x".to_json() }, sample_schema())
+  let errors = @tools.validate_params({ "query": "x" }, sample_schema())
   assert_true(has_error(errors, "missing required count"))
   assert_true(has_error(errors, "query must be at least 2 chars"))
 }

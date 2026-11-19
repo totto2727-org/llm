@@ -21,8 +21,8 @@ pub async fn fetch_async(
   http_method : String,
   headers_json : String,
   body : String,
-  _timeout_sec : Int,
-) -> (Int, String) {
+  _timeout_sec : Int32,
+) -> (Int32, String) {
   let headers = parse_http_headers(headers_json)
   let (response, response_body) = match http_method.to_upper() {
     "GET" => @x_http.get(url, headers~)
@@ -38,7 +38,7 @@ pub async fn fetch_async(
 pub async fn exec_async(
   program : String,
   args : Array[String],
-) -> (Int, String, String) {
+) -> (Int32, String, String) {
   let (code, stdout, stderr) = @x_process.collect_output(program, args)
   (code, stdout.text(), stderr.text())
 }

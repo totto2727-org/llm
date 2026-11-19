@@ -6,6 +6,6 @@ fn run_command(_program : String, _args_json : String) -> String {
 
 ///|
 /// Wasm stub: run shell command (not supported).
-fn run_shell(_command : String, _timeout_ms : Int) -> String {
+fn run_shell(_command : String, _timeout_ms : Int32) -> String {
   abort("run_shell is not supported on wasm target")
 }

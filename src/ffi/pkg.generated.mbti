@@ -1,22 +1,22 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/llm/ffi"
+package "totto2727/llm/ffi"
 
 // Values
 pub async fn[T, E : Error] async_suspend(((T) -> Unit, (E) -> Unit) -> Unit) -> T raise E
 
-pub async fn exec_async(String, Array[String]) -> (Int, String, String)
+pub async fn exec_async(String, Array[String]) -> (Int32, String, String)
 
 pub fn exec_stream(String, String, (String) -> Unit, () -> Unit, (String) -> Unit) -> Unit
 
-pub fn exec_sync(String, Int) -> String
+pub fn exec_sync(String, Int32) -> String
 
-pub fn fetch(String, String, String, String, Int, (String) -> Unit, (String) -> Unit) -> Unit
+pub fn fetch(String, String, String, String, Int32, (String) -> Unit, (String) -> Unit) -> Unit
 
-pub async fn fetch_async(String, String, String, String, Int) -> (Int, String)
+pub async fn fetch_async(String, String, String, String, Int32) -> (Int32, String)
 
-pub fn fetch_sse(String, String, String, String, Int, (String) -> Unit, (String) -> Unit, () -> Unit) -> Unit
+pub fn fetch_sse(String, String, String, String, Int32, (String) -> Unit, (String) -> Unit, () -> Unit) -> Unit
 
-pub fn fetch_text_async(String, String, String, String, Int) -> Promise[String]
+pub fn fetch_text_async(String, String, String, String, Int32) -> Promise[String]
 
 pub fn get_env(String) -> String
 

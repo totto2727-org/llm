@@ -1,9 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/llm"
+package "totto2727/llm"
 
 import {
-  "mizchi/llm/tools",
   "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "totto2727/llm/tools",
 }
 
 // Values
@@ -19,13 +20,13 @@ pub let default_openai_model : String
 
 pub let default_openrouter_model : String
 
-pub fn json_get_array(Json, String) -> Array[Json]?
+pub fn json_get_array(@json.Json, String) -> Array[@json.Json]?
 
-pub fn json_get_int(Json, String) -> Int?
+pub fn json_get_int(@json.Json, String) -> Int32?
 
-pub fn json_get_object(Json, String) -> Json?
+pub fn json_get_object(@json.Json, String) -> @json.Json?
 
-pub fn json_get_string(Json, String) -> String?
+pub fn json_get_string(@json.Json, String) -> String?
 
 pub fn parse_skill_frontmatter(String) -> (Map[String, String]?, String)
 
@@ -33,7 +34,7 @@ pub fn run_agent(BoxedProvider, @tools.ToolRegistry, Array[Message], StopConditi
 
 pub fn run_agent_cancellable(BoxedProvider, @tools.ToolRegistry, Array[Message], StopCondition, () -> Bool, (AgentEvent) -> Unit) -> Unit
 
-pub fn run_json_chat_loop(Array[Json], Array[Json], Int, (Array[Json], Array[Json]) -> JsonChatResponse, (String, Json) -> String, fallback_content? : String) -> JsonChatLoopResult
+pub fn run_json_chat_loop(Array[@json.Json], Array[@json.Json], Int32, (Array[@json.Json], Array[@json.Json]) -> JsonChatResponse, (String, @json.Json) -> String, fallback_content? : String) -> JsonChatLoopResult
 
 pub fn skill_metadata_description(Map[String, String]?, String) -> String
 
@@ -45,20 +46,20 @@ pub fn skill_metadata_missing_requirements(Map[String, String]?, bins? : Map[Str
 
 pub fn strip_skill_frontmatter(String) -> String
 
-pub fn truncate_messages(Array[Message], Int) -> Array[Message]
+pub fn truncate_messages(Array[Message], Int32) -> Array[Message]
 
-pub fn validate_params(Json, Json) -> Array[String]
+pub fn validate_params(@json.Json, @json.Json) -> Array[String]
 
-pub fn validate_tool_input(Json, Json) -> Array[String]
+pub fn validate_tool_input(@json.Json, @json.Json) -> Array[String]
 
 // Errors
 
 // Types and methods
 pub(all) enum AgentEvent {
   Stream(StreamEvent)
-  ToolExecute(name~ : String, input~ : Json)
+  ToolExecute(name~ : String, input~ : @json.Json)
   ToolResult(name~ : String, result~ : String, is_error~ : Bool)
-  StepComplete(step~ : Int)
+  StepComplete(step~ : Int32)
   Done(reason~ : String)
 }
 
@@ -78,12 +79,13 @@ pub(all) struct CollectResult {
 
 pub(all) enum ContentBlock {
   Text(String)
-  ToolUse(id~ : String, name~ : String, input~ : Json)
+  ToolUse(id~ : String, name~ : String, input~ : @json.Json)
   ToolResult(tool_use_id~ : String, content~ : String, is_error~ : Bool)
 }
-pub fn ContentBlock::to_anthropic_json(Self) -> Json
-pub fn ContentBlock::to_openai_json(Self) -> Json
+pub fn ContentBlock::to_anthropic_json(Self) -> @json.Json
+pub fn ContentBlock::to_openai_json(Self) -> @json.Json
 
+#derive(@debug.Debug)
 pub(all) enum FinishReason {
   Stop
   ToolUse
@@ -91,14 +93,14 @@ pub(all) enum FinishReason {
   ContentFilter
   Error
   Unknown(String)
-} derive(@debug.Debug)
+}
 pub fn FinishReason::from_string(String) -> Self
 pub impl Show for FinishReason
 
 pub(all) struct JsonChatLoopResult {
   final_content : String
-  messages : Array[Json]
-  iterations : Int
+  messages : Array[@json.Json]
+  iterations : Int32
 }
 
 pub(all) struct JsonChatResponse {
@@ -111,26 +113,26 @@ pub fn JsonChatResponse::new(String, Array[JsonChatToolCall], String?) -> Self
 pub(all) struct JsonChatToolCall {
   id : String
   name : String
-  arguments : Json
+  arguments : @json.Json
 }
-pub fn JsonChatToolCall::new(String, String, Json) -> Self
+pub fn JsonChatToolCall::new(String, String, @json.Json) -> Self
 
 pub(all) struct Message {
   role : Role
   content : Array[ContentBlock]
 }
 pub fn Message::assistant(String) -> Self
-pub fn Message::estimate_tokens(Self) -> Int
+pub fn Message::estimate_tokens(Self) -> Int32
 pub fn Message::get_text(Self) -> String
 pub fn Message::system(String) -> Self
 pub fn Message::text(Role, String) -> Self
-pub fn Message::to_anthropic_json(Self) -> Json
-pub fn Message::to_openai_json(Self) -> Json
+pub fn Message::to_anthropic_json(Self) -> @json.Json
+pub fn Message::to_openai_json(Self) -> @json.Json
 pub fn Message::user(String) -> Self
 
 pub struct MockProvider {
   responses : Array[Array[StreamEvent]]
-  mut call_count : Int
+  mut call_count : Int32
 }
 pub fn MockProvider::boxed(Self) -> BoxedProvider
 pub fn MockProvider::new(Array[Array[StreamEvent]]) -> Self
@@ -138,21 +140,22 @@ pub fn MockProvider::new(Array[Array[StreamEvent]]) -> Self
 pub(all) struct ProviderConfig {
   api_key : String
   model : String
-  max_tokens : Int
+  max_tokens : Int32
   system_prompt : String
   base_url : String
-  timeout_sec : Int
-  max_retries : Int
-  retry_delay_ms : Int
+  timeout_sec : Int32
+  max_retries : Int32
+  retry_delay_ms : Int32
 }
-pub fn ProviderConfig::new(String, String, String, max_tokens? : Int, system_prompt? : String, timeout_sec? : Int, max_retries? : Int, retry_delay_ms? : Int) -> Self
+pub fn ProviderConfig::new(String, String, String, max_tokens? : Int32, system_prompt? : String, timeout_sec? : Int32, max_retries? : Int32, retry_delay_ms? : Int32) -> Self
 
+#derive(Eq, @debug.Debug)
 pub(all) enum Role {
   User
   Assistant
   System
   Tool
-} derive(Eq, @debug.Debug)
+}
 pub fn Role::from_string(String) -> Self
 pub fn Role::to_string(Self) -> String
 pub impl Show for Role
@@ -189,7 +192,7 @@ pub fn SkillsLoader::register_builtin_skill(Self, String, String, path? : String
 pub fn SkillsLoader::register_workspace_skill(Self, String, String, path? : String) -> Unit
 
 pub(all) enum StopCondition {
-  MaxSteps(Int)
+  MaxSteps(Int32)
   OnFinish
 }
 
@@ -197,7 +200,7 @@ pub(all) enum StreamEvent {
   TextDelta(String)
   ToolCallStart(id~ : String, name~ : String)
   ToolCallDelta(id~ : String, input_delta~ : String)
-  ToolCallEnd(id~ : String, name~ : String, input~ : Json)
+  ToolCallEnd(id~ : String, name~ : String, input~ : @json.Json)
   MessageStart
   MessageEnd(finish_reason~ : FinishReason, usage~ : Usage?)
   Error(String)
@@ -211,13 +214,14 @@ pub(all) struct StreamHandler {
 pub(all) struct ToolCall {
   id : String
   name : String
-  input : Json
+  input : @json.Json
 }
 
+#derive(@debug.Debug)
 pub(all) struct Usage {
-  input_tokens : Int
-  output_tokens : Int
-} derive(@debug.Debug)
+  input_tokens : Int32
+  output_tokens : Int32
+}
 pub impl Show for Usage
 
 // Type aliases

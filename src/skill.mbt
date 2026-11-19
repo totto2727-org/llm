@@ -14,7 +14,7 @@ pub fn SkillEntry::new(
   source : String,
   content : String,
 ) -> SkillEntry {
-  { name, path, source, content }
+  { name, path, source, content, }
 }
 
 ///|
@@ -33,5 +33,5 @@ pub fn SkillInfo::new(
   source : String,
   available : Bool,
 ) -> SkillInfo {
-  { name, path, source, available }
+  { name, path, source, available, }
 }

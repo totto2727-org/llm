@@ -1,6 +1,9 @@
 import {
-  "moonbitlang/core/debug",
   "moonbitlang/core/json",
-  "mizchi/llm",
-  "mizchi/llm/ffi",
+  "totto2727/llm",
+  "totto2727/llm/ffi",
 }
+
+import {
+  "moonbitlang/core/debug",
+} for "test"

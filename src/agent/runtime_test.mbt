@@ -62,7 +62,7 @@ test "run_runtime_turn prefixes system sender and drops outbound metadata" {
     "abc",
     "subagent",
     "background done",
-    metadata={ "origin": "x".to_json() },
+    metadata={ "origin": "x" },
   )
   let result = run_runtime_turn(sessions, req, fn(
     _history,

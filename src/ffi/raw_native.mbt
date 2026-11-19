@@ -14,7 +14,7 @@ fn run_command(program : String, args_json : String) -> String {
 
 ///|
 /// Native primitive: run a shell command, return stdout.
-fn run_shell(command : String, _timeout_ms : Int) -> String {
+fn run_shell(command : String, _timeout_ms : Int32) -> String {
   let cmd_bytes = mbt_string_to_utf8_bytes(command)
   llm_popen_ffi(cmd_bytes)
 }
@@ -22,7 +22,7 @@ fn run_shell(command : String, _timeout_ms : Int) -> String {
 ///|
 /// Shell-escape a string using single quotes.
 fn shell_escape(s : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder::StringBuilder()
   buf.write_char('\'')
   for ch in s {
     if ch == '\'' {
@@ -39,7 +39,7 @@ fn shell_escape(s : String) -> String {
 /// Build a shell command string from program and args with escaping.
 /// Redirects stderr to stdout via 2>&1.
 fn build_shell_command(program : String, args : Array[String]) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder::StringBuilder()
   buf.write_string(shell_escape(program))
   for arg in args {
     buf.write_char(' ')

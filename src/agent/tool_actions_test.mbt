@@ -41,7 +41,7 @@ test "tool defs keep expected names and required fields" {
 ///|
 test "resolve_message_tool validates and applies fallback" {
   let ctx = RuntimeToolContext::new(channel="telegram", chat_id="42")
-  match resolve_message_tool({ "content": "hello".to_json() }, ctx) {
+  match resolve_message_tool({ "content": "hello" }, ctx) {
     Ok(plan) => {
       assert_eq(plan.content, "hello")
       assert_eq(plan.channel, "telegram")
@@ -58,7 +58,7 @@ test "resolve_message_tool validates and applies fallback" {
 ///|
 test "resolve_spawn_tool validates and sets default origin" {
   let ctx = RuntimeToolContext::new()
-  match resolve_spawn_tool({ "task": "collect logs".to_json() }, ctx) {
+  match resolve_spawn_tool({ "task": "collect logs" }, ctx) {
     Ok(plan) => {
       assert_eq(plan.task, "collect logs")
       @debug.debug_inspect(plan.label, content="None")
@@ -78,11 +78,7 @@ test "resolve_cron_tool validates action and parameters" {
   let ctx = RuntimeToolContext::new(channel="telegram", chat_id="42")
   match
     resolve_cron_tool(
-      {
-        "action": "add".to_json(),
-        "message": "daily reminder".to_json(),
-        "every_seconds": (60).to_json(),
-      },
+      { "action": "add", "message": "daily reminder", "every_seconds": 60 },
       ctx,
     ) {
     Ok(Add(name~, schedule~, message~, channel~, chat_id~)) => {
@@ -94,23 +90,19 @@ test "resolve_cron_tool validates action and parameters" {
     }
     _ => assert_true(false)
   }
-  match resolve_cron_tool({ "action": "list".to_json() }, ctx) {
+  match resolve_cron_tool({ "action": "list" }, ctx) {
     Ok(List) => ()
     _ => assert_true(false)
   }
-  match
-    resolve_cron_tool(
-      { "action": "remove".to_json(), "job_id": "job-1".to_json() },
-      ctx,
-    ) {
+  match resolve_cron_tool({ "action": "remove", "job_id": "job-1" }, ctx) {
     Ok(Remove(job_id~)) => assert_eq(job_id, "job-1")
     _ => assert_true(false)
   }
-  match resolve_cron_tool({ "action": "noop".to_json() }, ctx) {
+  match resolve_cron_tool({ "action": "noop" }, ctx) {
     Ok(_) => assert_true(false)
     Err(err) => assert_eq(err, "Unknown action: noop")
   }
-  match resolve_cron_tool({ "action": "add".to_json() }, ctx) {
+  match resolve_cron_tool({ "action": "add" }, ctx) {
     Ok(_) => assert_true(false)
     Err(err) => assert_eq(err, "Error: message is required for add")
   }

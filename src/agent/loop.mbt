@@ -12,7 +12,7 @@ pub fn LoopToolCall::new(
   name : String,
   arguments : Json,
 ) -> LoopToolCall {
-  { id, name, arguments }
+  { id, name, arguments, }
 }
 
 ///|
@@ -29,7 +29,7 @@ pub fn LoopResponse::new(
   tool_calls : Array[LoopToolCall],
   reasoning_content : String?,
 ) -> LoopResponse {
-  { content, tool_calls, reasoning_content }
+  { content, tool_calls, reasoning_content, }
 }
 
 ///|
@@ -64,7 +64,7 @@ impl ChatProvider for CallbackChatProvider with fn chat(
 pub struct AgentTurnResult {
   final_content : String
   messages : Array[Json]
-  iterations : Int
+  iterations : Int32
 }
 
 ///|
@@ -72,10 +72,10 @@ pub fn run_agent_loop(
   messages : Array[Json],
   tools : Array[Json],
   model : String,
-  max_iterations : Int,
+  max_iterations : Int32,
   chat : (Array[Json], Array[Json], String) -> LoopResponse,
   execute_tool : (String, Json) -> String,
-  fallback_content? : String = "I've completed processing but have no response to give.",
+  fallback_content~ : String = "I've completed processing but have no response to give.",
 ) -> AgentTurnResult {
   let result = @llm.run_json_chat_loop(
     messages,
@@ -101,9 +101,9 @@ pub fn run_agent_loop_with_provider(
   tools : Array[Json],
   provider : &ChatProvider,
   model : String,
-  max_iterations : Int,
+  max_iterations : Int32,
   execute_tool : (String, Json) -> String,
-  fallback_content? : String = "I've completed processing but have no response to give.",
+  fallback_content~ : String = "I've completed processing but have no response to give.",
 ) -> AgentTurnResult {
   run_agent_loop(
     messages,

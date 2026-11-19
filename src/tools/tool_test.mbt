@@ -21,7 +21,7 @@ fn json_get_object(j : Json, field : String) -> Json? {
 ///|
 test "ToolRegistry - register and execute" {
   let registry = ToolRegistry::new()
-  let schema : Json = { "type": "object".to_json() }
+  let schema : Json = { "type": "object" }
   registry.register("greet", "Greet a person", schema, fn(input) {
     let name = match json_get_string(input, "name") {
       Some(n) => n
@@ -37,9 +37,7 @@ test "ToolRegistry - register and execute" {
       #|"greet"
     ),
   )
-  let (result, is_error) = registry.execute("greet", {
-    "name": "Alice".to_json(),
-  })
+  let (result, is_error) = registry.execute("greet", { "name": "Alice" })
   @debug.debug_inspect(
     result,
     content=(
@@ -65,8 +63,8 @@ test "ToolRegistry - execute unknown tool" {
 ///|
 test "ToolDef::to_anthropic_json" {
   let schema : Json = {
-    "type": "object".to_json(),
-    "properties": { "path": { "type": "string".to_json() } },
+    "type": "object",
+    "properties": { "path": { "type": "string" } },
   }
   let tool : ToolDef = {
     name: "read_file",
@@ -91,8 +89,8 @@ test "ToolDef::to_anthropic_json" {
 ///|
 test "ToolDef::to_openai_json" {
   let schema : Json = {
-    "type": "object".to_json(),
-    "properties": { "path": { "type": "string".to_json() } },
+    "type": "object",
+    "properties": { "path": { "type": "string" } },
   }
   let tool : ToolDef = {
     name: "read_file",
@@ -112,7 +110,7 @@ test "ToolDef::to_openai_json" {
 
 ///|
 test "ToolDef::new constructs definition" {
-  let schema : Json = { "type": "object".to_json() }
+  let schema : Json = { "type": "object" }
   let tool = ToolDef::new("echo", "echo text", schema)
   @debug.debug_inspect(
     tool.name,
@@ -132,9 +130,9 @@ test "ToolDef::new constructs definition" {
 test "ToolRegistry::register_def and execute_result" {
   let registry = ToolRegistry::new()
   let tool = ToolDef::new("echo", "echo text", {
-    "type": "object".to_json(),
-    "properties": { "text": { "type": "string".to_json() } },
-    "required": Json::array(["text".to_json()]),
+    "type": "object",
+    "properties": { "text": { "type": "string" } },
+    "required": ["text"],
   })
   registry.register_def(tool, fn(input) {
     let text = match input {
@@ -148,7 +146,7 @@ test "ToolRegistry::register_def and execute_result" {
     "ECHO:" + text
   })
   assert_true(registry.has("echo"))
-  let ok = registry.execute_result("echo", { "text": "hi".to_json() })
+  let ok = registry.execute_result("echo", { "text": "hi" })
   match ok {
     Ok(result) => assert_eq(result, "ECHO:hi")
     Err(_) => assert_true(false)
@@ -169,8 +167,8 @@ test "ToolRegistry::definitions builds openai function array" {
   let registry = ToolRegistry::new()
   registry.register_def(
     ToolDef::new("sum", "sum numbers", {
-      "type": "object".to_json(),
-      "properties": { "a": { "type": "number".to_json() } },
+      "type": "object",
+      "properties": { "a": { "type": "number" } },
     }),
     fn(_input) { "ok" },
   )

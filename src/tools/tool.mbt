@@ -12,7 +12,7 @@ pub fn ToolDef::new(
   description : String,
   input_schema : Json,
 ) -> ToolDef {
-  { name, description, input_schema }
+  { name, description, input_schema, }
 }
 
 ///|
@@ -33,7 +33,7 @@ pub(all) struct SchemaBuilder {
 
 ///|
 pub fn SchemaBuilder::new() -> SchemaBuilder {
-  { properties: Map([]), required: [] }
+  { properties: Map([]), required: [], }
 }
 
 ///|
@@ -42,11 +42,11 @@ pub fn SchemaBuilder::string(
   self : SchemaBuilder,
   name : String,
   description : String,
-  required? : Bool = false,
+  required~ : Bool = false,
 ) -> SchemaBuilder {
   let prop : Map[String, Json] = Map([])
-  prop["type"] = "string".to_json()
-  prop["description"] = description.to_json()
+  prop["type"] = ToJson::to_json("string")
+  prop["description"] = ToJson::to_json(description)
   self.properties[name] = Json::object(prop)
   if required {
     self.required.push(name)
@@ -60,11 +60,11 @@ pub fn SchemaBuilder::number(
   self : SchemaBuilder,
   name : String,
   description : String,
-  required? : Bool = false,
+  required~ : Bool = false,
 ) -> SchemaBuilder {
   let prop : Map[String, Json] = Map([])
-  prop["type"] = "number".to_json()
-  prop["description"] = description.to_json()
+  prop["type"] = ToJson::to_json("number")
+  prop["description"] = ToJson::to_json(description)
   self.properties[name] = Json::object(prop)
   if required {
     self.required.push(name)
@@ -78,11 +78,11 @@ pub fn SchemaBuilder::integer(
   self : SchemaBuilder,
   name : String,
   description : String,
-  required? : Bool = false,
+  required~ : Bool = false,
 ) -> SchemaBuilder {
   let prop : Map[String, Json] = Map([])
-  prop["type"] = "integer".to_json()
-  prop["description"] = description.to_json()
+  prop["type"] = ToJson::to_json("integer")
+  prop["description"] = ToJson::to_json(description)
   self.properties[name] = Json::object(prop)
   if required {
     self.required.push(name)
@@ -96,11 +96,11 @@ pub fn SchemaBuilder::boolean(
   self : SchemaBuilder,
   name : String,
   description : String,
-  required? : Bool = false,
+  required~ : Bool = false,
 ) -> SchemaBuilder {
   let prop : Map[String, Json] = Map([])
-  prop["type"] = "boolean".to_json()
-  prop["description"] = description.to_json()
+  prop["type"] = ToJson::to_json("boolean")
+  prop["description"] = ToJson::to_json(description)
   self.properties[name] = Json::object(prop)
   if required {
     self.required.push(name)
@@ -115,12 +115,12 @@ pub fn SchemaBuilder::string_enum(
   name : String,
   description : String,
   values : Array[String],
-  required? : Bool = false,
+  required~ : Bool = false,
 ) -> SchemaBuilder {
   let prop : Map[String, Json] = Map([])
-  prop["type"] = "string".to_json()
-  prop["description"] = description.to_json()
-  prop["enum"] = Json::array(values.map(fn(v) { v.to_json() }))
+  prop["type"] = ToJson::to_json("string")
+  prop["description"] = ToJson::to_json(description)
+  prop["enum"] = Json::array(values.map(ToJson::to_json))
   self.properties[name] = Json::object(prop)
   if required {
     self.required.push(name)
@@ -135,13 +135,13 @@ pub fn SchemaBuilder::array(
   name : String,
   description : String,
   item_type : String,
-  required? : Bool = false,
+  required~ : Bool = false,
 ) -> SchemaBuilder {
   let items : Map[String, Json] = Map([])
-  items["type"] = item_type.to_json()
+  items["type"] = ToJson::to_json(item_type)
   let prop : Map[String, Json] = Map([])
-  prop["type"] = "array".to_json()
-  prop["description"] = description.to_json()
+  prop["type"] = ToJson::to_json("array")
+  prop["description"] = ToJson::to_json(description)
   prop["items"] = Json::object(items)
   self.properties[name] = Json::object(prop)
   if required {
@@ -154,10 +154,10 @@ pub fn SchemaBuilder::array(
 /// Build the JSON Schema object.
 pub fn SchemaBuilder::build(self : SchemaBuilder) -> Json {
   let schema : Map[String, Json] = Map([])
-  schema["type"] = "object".to_json()
+  schema["type"] = ToJson::to_json("object")
   schema["properties"] = Json::object(self.properties)
   if !self.required.is_empty() {
-    schema["required"] = Json::array(self.required.map(fn(s) { s.to_json() }))
+    schema["required"] = Json::array(self.required.map(ToJson::to_json))
   }
   Json::object(schema)
 }
@@ -189,7 +189,7 @@ pub fn ToolExecuteError::to_message(self : ToolExecuteError) -> String {
 
 ///|
 pub fn ToolRegistry::new() -> ToolRegistry {
-  { tools: [], handlers: Map([]) }
+  { tools: [], handlers: Map([]), }
 }
 
 ///|
@@ -302,8 +302,8 @@ fn ToolRegistry::find_tool(self : ToolRegistry, name : String) -> ToolDef? {
 /// Convert ToolDef to Anthropic format JSON.
 pub fn ToolDef::to_anthropic_json(self : ToolDef) -> Json {
   {
-    "name": self.name.to_json(),
-    "description": self.description.to_json(),
+    "name": ToJson::to_json(self.name),
+    "description": ToJson::to_json(self.description),
     "input_schema": self.input_schema,
   }
 }
@@ -312,10 +312,10 @@ pub fn ToolDef::to_anthropic_json(self : ToolDef) -> Json {
 /// Convert ToolDef to OpenAI format JSON.
 pub fn ToolDef::to_openai_json(self : ToolDef) -> Json {
   {
-    "type": "function".to_json(),
+    "type": ToJson::to_json("function"),
     "function": {
-      "name": self.name.to_json(),
-      "description": self.description.to_json(),
+      "name": ToJson::to_json(self.name),
+      "description": ToJson::to_json(self.description),
       "parameters": self.input_schema,
     },
   }

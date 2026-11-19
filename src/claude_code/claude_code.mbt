@@ -6,10 +6,10 @@ pub struct ClaudeCodeProvider {
 
 ///|
 pub fn ClaudeCodeProvider::new(
-  model? : String = "",
-  system_prompt? : String = "",
+  model~ : String = "",
+  system_prompt~ : String = "",
 ) -> ClaudeCodeProvider {
-  { model, system_prompt }
+  { model, system_prompt, }
 }
 
 ///|
@@ -32,7 +32,7 @@ pub fn parse_claude_code_line(line : String) -> @llm.StreamEvent? {
         Some(msg) =>
           match @llm.json_get_array(msg, "content") {
             Some(content) => {
-              let buf = StringBuilder::new()
+              let buf = StringBuilder::StringBuilder()
               for block in content {
                 let block_type = get_str(block, "type", "")
                 if block_type == "text" {
@@ -63,7 +63,7 @@ pub fn parse_claude_code_line(line : String) -> @llm.StreamEvent? {
             Some(n) => n
             None => 0
           }
-          Some(@llm.Usage::{ input_tokens, output_tokens })
+          Some(@llm.Usage::{ input_tokens, output_tokens, })
         }
         None => None
       }
@@ -85,7 +85,7 @@ pub impl @llm.Provider for ClaudeCodeProvider with fn stream(
   handler,
 ) {
   // Build the prompt from messages
-  let prompt = StringBuilder::new()
+  let prompt = StringBuilder::StringBuilder()
   for msg in messages {
     let text = msg.get_text()
     if !text.is_empty() {
@@ -106,7 +106,7 @@ pub impl @llm.Provider for ClaudeCodeProvider with fn stream(
     args.push("--model")
     args.push(self.model)
   }
-  let args_json = Json::array(args.map(fn(s) { s.to_json() }))
+  let args_json = Json::array(args.map(ToJson::to_json))
   (handler.on_event)(@llm.StreamEvent::MessageStart)
   @ffi.exec_stream(
     "claude",

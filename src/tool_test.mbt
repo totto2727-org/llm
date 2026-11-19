@@ -1,7 +1,7 @@
 ///|
 test "ToolRegistry - register and execute" {
   let registry = ToolRegistry::new()
-  let schema : Json = { "type": "object".to_json() }
+  let schema : Json = { "type": "object" }
   registry.register("greet", "Greet a person", schema, fn(input) {
     let name = match json_get_string(input, "name") {
       Some(n) => n
@@ -17,9 +17,7 @@ test "ToolRegistry - register and execute" {
       #|"greet"
     ),
   )
-  let (result, is_error) = registry.execute("greet", {
-    "name": "Alice".to_json(),
-  })
+  let (result, is_error) = registry.execute("greet", { "name": "Alice" })
   @debug.debug_inspect(
     result,
     content=(
@@ -45,8 +43,8 @@ test "ToolRegistry - execute unknown tool" {
 ///|
 test "ToolDef::to_anthropic_json" {
   let schema : Json = {
-    "type": "object".to_json(),
-    "properties": { "path": { "type": "string".to_json() } },
+    "type": "object",
+    "properties": { "path": { "type": "string" } },
   }
   let tool : ToolDef = {
     name: "read_file",
@@ -71,8 +69,8 @@ test "ToolDef::to_anthropic_json" {
 ///|
 test "ToolDef::to_openai_json" {
   let schema : Json = {
-    "type": "object".to_json(),
-    "properties": { "path": { "type": "string".to_json() } },
+    "type": "object",
+    "properties": { "path": { "type": "string" } },
   }
   let tool : ToolDef = {
     name: "read_file",

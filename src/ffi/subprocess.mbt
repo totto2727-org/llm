@@ -1,6 +1,6 @@
 ///|
 /// Execute a command synchronously and return stdout.
-pub fn exec_sync(command : String, timeout_ms : Int) -> String {
+pub fn exec_sync(command : String, timeout_ms : Int32) -> String {
   run_shell(command, timeout_ms)
 }
 

@@ -23,7 +23,7 @@ pub fn run_agent_cancellable(
       on_event(Done(reason="max_steps"))
       break
     }
-    let text_buf = StringBuilder::new()
+    let text_buf = StringBuilder::StringBuilder()
     let pending_tool_calls : Array[ToolCall] = []
     let finish_reason : Ref[FinishReason] = Ref(Stop)
     let handler : StreamHandler = {
@@ -32,7 +32,7 @@ pub fn run_agent_cancellable(
         match event {
           TextDelta(s) => text_buf.write_string(s)
           ToolCallEnd(id~, name~, input~) =>
-            pending_tool_calls.push({ id, name, input })
+            pending_tool_calls.push({ id, name, input, })
           MessageEnd(finish_reason=fr, ..) => finish_reason.val = fr
           _ => ()
         }
@@ -48,7 +48,7 @@ pub fn run_agent_cancellable(
       assistant_content.push(ToolUse(id=tc.id, name=tc.name, input=tc.input))
     }
     if !assistant_content.is_empty() {
-      messages.push({ role: Assistant, content: assistant_content })
+      messages.push({ role: Assistant, content: assistant_content, })
     }
     if pending_tool_calls.is_empty() {
       on_event(Done(reason="no_tool_calls"))

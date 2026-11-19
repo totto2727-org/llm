@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/llm/claude_code"
+package "totto2727/llm/claude_code"
 
 import {
-  "mizchi/llm",
-  "mizchi/llm/tools",
+  "totto2727/llm",
+  "totto2727/llm/tools",
 }
 
 // Values

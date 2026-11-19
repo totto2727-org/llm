@@ -2,20 +2,20 @@
 /// Convert a ContentBlock to JSON (Anthropic format).
 pub fn ContentBlock::to_anthropic_json(self : ContentBlock) -> Json {
   match self {
-    Text(s) => { "type": "text".to_json(), "text": s.to_json() }
+    Text(s) => { "type": "text", "text": ToJson::to_json(s) }
     ToolUse(id~, name~, input~) =>
       {
-        "type": "tool_use".to_json(),
-        "id": id.to_json(),
-        "name": name.to_json(),
+        "type": "tool_use",
+        "id": ToJson::to_json(id),
+        "name": ToJson::to_json(name),
         "input": input,
       }
     ToolResult(tool_use_id~, content~, is_error~) =>
       {
-        "type": "tool_result".to_json(),
-        "tool_use_id": tool_use_id.to_json(),
-        "content": content.to_json(),
-        "is_error": is_error.to_json(),
+        "type": "tool_result",
+        "tool_use_id": ToJson::to_json(tool_use_id),
+        "content": ToJson::to_json(content),
+        "is_error": ToJson::to_json(is_error),
       }
   }
 }
@@ -24,21 +24,21 @@ pub fn ContentBlock::to_anthropic_json(self : ContentBlock) -> Json {
 /// Convert a ContentBlock to JSON (OpenAI format).
 pub fn ContentBlock::to_openai_json(self : ContentBlock) -> Json {
   match self {
-    Text(s) => { "type": "text".to_json(), "text": s.to_json() }
+    Text(s) => { "type": "text", "text": ToJson::to_json(s) }
     ToolUse(id~, name~, input~) =>
       {
-        "type": "function".to_json(),
-        "id": id.to_json(),
+        "type": "function",
+        "id": ToJson::to_json(id),
         "function": {
-          "name": name.to_json(),
-          "arguments": input.stringify().to_json(),
+          "name": ToJson::to_json(name),
+          "arguments": ToJson::to_json(input.stringify()),
         },
       }
     ToolResult(tool_use_id~, content~, ..) =>
       {
-        "role": "tool".to_json(),
-        "tool_call_id": tool_use_id.to_json(),
-        "content": content.to_json(),
+        "role": "tool",
+        "tool_call_id": ToJson::to_json(tool_use_id),
+        "content": ToJson::to_json(content),
       }
   }
 }
@@ -48,7 +48,7 @@ pub fn ContentBlock::to_openai_json(self : ContentBlock) -> Json {
 pub fn Message::to_anthropic_json(self : Message) -> Json {
   let content_arr = self.content.map(ContentBlock::to_anthropic_json)
   {
-    "role": self.role.to_string().to_json(),
+    "role": ToJson::to_json(self.role.to_string()),
     "content": Json::array(content_arr),
   }
 }
@@ -61,14 +61,14 @@ pub fn Message::to_openai_json(self : Message) -> Json {
     match self.content[0] {
       Text(s) =>
         return {
-          "role": self.role.to_string().to_json(),
-          "content": s.to_json(),
+          "role": ToJson::to_json(self.role.to_string()),
+          "content": ToJson::to_json(s),
         }
       ToolResult(tool_use_id~, content~, ..) =>
         return {
-          "role": "tool".to_json(),
-          "tool_call_id": tool_use_id.to_json(),
-          "content": content.to_json(),
+          "role": "tool",
+          "tool_call_id": ToJson::to_json(tool_use_id),
+          "content": ToJson::to_json(content),
         }
       _ => ()
     }
@@ -83,19 +83,19 @@ pub fn Message::to_openai_json(self : Message) -> Json {
           Text(s) => text_parts.push(s)
           ToolUse(id~, name~, input~) =>
             tool_calls.push({
-              "id": id.to_json(),
-              "type": "function".to_json(),
+              "id": ToJson::to_json(id),
+              "type": "function",
               "function": {
-                "name": name.to_json(),
-                "arguments": input.stringify().to_json(),
+                "name": ToJson::to_json(name),
+                "arguments": ToJson::to_json(input.stringify()),
               },
             })
           _ => ()
         }
       }
       let result : Map[String, Json] = Map([])
-      result["role"] = "assistant".to_json()
-      result["content"] = text_parts.join("").to_json()
+      result["role"] = ToJson::to_json("assistant")
+      result["content"] = ToJson::to_json(text_parts.join(""))
       if !tool_calls.is_empty() {
         result["tool_calls"] = Json::array(tool_calls)
       }
@@ -105,7 +105,7 @@ pub fn Message::to_openai_json(self : Message) -> Json {
   }
   let content_arr = self.content.map(ContentBlock::to_openai_json)
   {
-    "role": self.role.to_string().to_json(),
+    "role": ToJson::to_json(self.role.to_string()),
     "content": Json::array(content_arr),
   }
 }
@@ -125,7 +125,7 @@ pub fn json_get_string(j : Json, field : String) -> String? {
 
 ///|
 /// Helper to get an int field from a JSON object.
-pub fn json_get_int(j : Json, field : String) -> Int? {
+pub fn json_get_int(j : Json, field : String) -> Int32? {
   match j {
     Object(m) =>
       match m.get(field) {
