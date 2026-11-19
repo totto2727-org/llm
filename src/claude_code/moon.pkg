@@ -1,26 +1,10 @@
 import {
+  "mizchi/x/process" @x_process,
   "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "totto2727/llm",
 }
 
-#cfg(target = "js")
-import {
-  "mizchi/x/process" @x_process,
-}
-
-#cfg(any(target = "native", target = "wasm"))
-import {
-  "moonbitlang/async/process",
-}
-
 import {
   "moonbitlang/core/debug",
 } for "test"
-
-options(
-  targets: {
-    "process_js.mbt": [ "js" ],
-    "process_native.mbt": [ "native", "wasm" ],
-  },
-)

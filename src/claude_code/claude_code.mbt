@@ -107,17 +107,19 @@ pub impl @llm.Provider for ClaudeCodeProvider with fn stream(
     args.push(self.model)
   }
   (handler.on_event)(@llm.StreamEvent::MessageStart)
-  let (code, stdout, stderr) = collect_output("claude", args) catch {
+  let (code, stdout, stderr) = @x_process.collect_output("claude", args) catch {
     error => {
       (handler.on_event)(@llm.StreamEvent::Error(@debug.to_string(error)))
       return
     }
   }
   if code != 0 {
-    (handler.on_event)(@llm.StreamEvent::Error("exit code \{code}: \{stderr}"))
+    (handler.on_event)(
+      @llm.StreamEvent::Error("exit code \{code}: \{stderr.text()}"),
+    )
     return
   }
-  for line in stdout.split("\n") {
+  for line in stdout.text().split("\n") {
     if parse_claude_code_line(line.to_owned()) is Some(event) {
       (handler.on_event)(event)
     }
