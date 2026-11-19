@@ -29,13 +29,13 @@ pub struct OpenAIProvider {
 ///|
 pub fn OpenAIProvider::new(
   api_key : String,
-  endpoint? : OpenAIEndpoint = OpenAI,
-  model? : String = "gpt-4o",
-  max_tokens? : Int = 4096,
-  system_prompt? : String = "",
+  endpoint~ : OpenAIEndpoint = OpenAI,
+  model~ : String = "gpt-4o",
+  max_tokens~ : Int32 = 4096,
+  system_prompt~ : String = "",
   base_url? : String,
-  timeout_sec? : Int = 300,
-  max_retries? : Int = 3,
+  timeout_sec~ : Int32 = 300,
+  max_retries~ : Int32 = 3,
 ) -> OpenAIProvider {
   let url = match base_url {
     Some(u) => u
@@ -60,11 +60,11 @@ pub fn OpenAIProvider::new(
 pub fn OpenAIProvider::new_compat(
   base_url : String,
   model : String,
-  api_key? : String = "",
-  max_tokens? : Int = 4096,
-  system_prompt? : String = "",
-  timeout_sec? : Int = 300,
-  max_retries? : Int = 3,
+  api_key~ : String = "",
+  max_tokens~ : Int32 = 4096,
+  system_prompt~ : String = "",
+  timeout_sec~ : Int32 = 300,
+  max_retries~ : Int32 = 3,
 ) -> OpenAIProvider {
   let endpoint = if api_key.is_empty() { Ollama } else { Custom(base_url~) }
   {
@@ -84,15 +84,15 @@ pub fn OpenAIProvider::new_compat(
 ///|
 fn build_openai_headers(api_key : String, endpoint : OpenAIEndpoint) -> Json {
   let headers : Map[String, Json] = Map([])
-  headers["Content-Type"] = "application/json".to_json()
+  headers["Content-Type"] = ToJson::to_json("application/json")
   match endpoint {
     Ollama => ()
-    _ => headers["Authorization"] = ("Bearer " + api_key).to_json()
+    _ => headers["Authorization"] = ToJson::to_json("Bearer " + api_key)
   }
   match endpoint {
     OpenRouter => {
-      headers["HTTP-Referer"] = "https://github.com/mizchi/llm".to_json()
-      headers["X-Title"] = "mizchi/llm".to_json()
+      headers["HTTP-Referer"] = ToJson::to_json("https://github.com/mizchi/llm")
+      headers["X-Title"] = ToJson::to_json("mizchi/llm")
     }
     _ => ()
   }
@@ -102,13 +102,13 @@ fn build_openai_headers(api_key : String, endpoint : OpenAIEndpoint) -> Json {
 ///|
 fn build_openai_body(
   model : String,
-  max_tokens : Int,
+  max_tokens : Int32,
   system_prompt : String,
   messages : Array[@llm.Message],
   tools : Array[@llm.ToolDef],
 ) -> Json {
   let body : Map[String, Json] = Map([])
-  body["model"] = model.to_json()
+  body["model"] = ToJson::to_json(model)
   body["max_tokens"] = Json::number(max_tokens.to_double())
   body["stream"] = Json::boolean(true)
   let stream_options : Map[String, Json] = Map([])
@@ -138,7 +138,7 @@ fn get_str(j : Json, field : String, default : String) -> String {
 }
 
 ///|
-fn get_int(j : Json, field : String, default : Int) -> Int {
+fn get_int(j : Json, field : String, default : Int32) -> Int32 {
   match @llm.json_get_int(j, field) {
     Some(n) => n
     None => default
@@ -216,7 +216,7 @@ fn apply_openai_tool_fragments(
         }
       }
       None => {
-        let input_buf = StringBuilder::new()
+        let input_buf = StringBuilder::StringBuilder()
         if !args_delta.is_empty() {
           input_buf.write_string(args_delta)
         }
@@ -299,7 +299,7 @@ pub fn parse_openai_event(data : String) -> @llm.StreamEvent? {
           if inp == 0 && out == 0 {
             None
           } else {
-            Some(@llm.Usage::{ input_tokens: inp, output_tokens: out })
+            Some(@llm.Usage::{ input_tokens: inp, output_tokens: out, })
           }
         }
         None => None
@@ -380,10 +380,9 @@ pub impl @llm.Provider for OpenAIProvider with fn stream(
   // Track tool calls for building ToolCallEnd events
   let active_tools : Map[String, (String, StringBuilder)] = Map([])
   // Hold pending MessageEnd to merge with a later usage-only chunk
-  let pending_end : Ref[@llm.StreamEvent?] = { val: None }
+  let pending_end : Ref[@llm.StreamEvent?] = { val: None, }
   @ffi.fetch_sse(
     url,
-    "POST",
     headers.stringify(),
     body.stringify(),
     self.config.timeout_sec,
@@ -398,11 +397,11 @@ pub impl @llm.Provider for OpenAIProvider with fn stream(
             | @llm.StreamEvent::ToolCallDelta(..) => ()
             @llm.StreamEvent::MessageEnd(
               finish_reason=cur_reason,
-              usage=cur_usage
+              usage=cur_usage,
             ) =>
               match pending_end.val {
                 Some(
-                  @llm.StreamEvent::MessageEnd(finish_reason=prev_reason, ..)
+                  @llm.StreamEvent::MessageEnd(finish_reason=prev_reason, ..),
                 ) => {
                   // This is the usage-only chunk; merge with pending
                   for entry in active_tools.iter2() {
@@ -504,7 +503,7 @@ pub impl @llm.Provider for OpenAIProvider with fn name(self) -> String {
 pub(all) struct ModelInfo {
   id : String
   name : String
-  context_length : Int
+  context_length : Int32
   pricing_prompt : String
   pricing_completion : String
 }
@@ -521,45 +520,39 @@ pub impl Show for ModelInfo with fn output(self, logger) {
 
 ///|
 /// Fetch model list from OpenRouter API.
-pub fn list_openrouter_models() -> Array[ModelInfo] {
+pub async fn list_openrouter_models() -> Array[ModelInfo] {
   let models : Array[ModelInfo] = []
   let headers : Map[String, Json] = Map([])
-  headers["Accept"] = "application/json".to_json()
+  headers["Accept"] = ToJson::to_json("application/json")
   let headers_json = Json::object(headers).stringify()
-  @ffi.fetch(
-    "https://openrouter.ai/api/v1/models",
-    "GET",
-    headers_json,
-    "",
-    30,
-    fn(body) {
-      let json = @json.parse(body) catch { _ => return }
-      let data = match @llm.json_get_array(json, "data") {
-        Some(arr) => arr
-        None => return
+  let (status, body) = @ffi.fetch_async(
+    "https://openrouter.ai/api/v1/models", "GET", headers_json, "", 30,
+  ) catch {
+    _ => return []
+  }
+  guard status >= 200 && status < 300 else { return [] }
+  let json = @json.parse(body) catch { _ => return [] }
+  if @llm.json_get_array(json, "data") is Some(data) {
+    for item in data {
+      let id = get_str(item, "id", "")
+      let name = get_str(item, "name", "")
+      let context_length = match @llm.json_get_int(item, "context_length") {
+        Some(n) => n
+        None => 0
       }
-      for item in data {
-        let id = get_str(item, "id", "")
-        let name = get_str(item, "name", "")
-        let context_length = match @llm.json_get_int(item, "context_length") {
-          Some(n) => n
-          None => 0
-        }
-        let (pricing_prompt, pricing_completion) = match
-          @llm.json_get_object(item, "pricing") {
-          Some(p) => (get_str(p, "prompt", "0"), get_str(p, "completion", "0"))
-          None => ("0", "0")
-        }
-        models.push({
-          id,
-          name,
-          context_length,
-          pricing_prompt,
-          pricing_completion,
-        })
+      let (pricing_prompt, pricing_completion) = match
+        @llm.json_get_object(item, "pricing") {
+        Some(p) => (get_str(p, "prompt", "0"), get_str(p, "completion", "0"))
+        None => ("0", "0")
       }
-    },
-    fn(_error) {  },
-  )
+      models.push({
+        id,
+        name,
+        context_length,
+        pricing_prompt,
+        pricing_completion,
+      })
+    }
+  }
   models
 }

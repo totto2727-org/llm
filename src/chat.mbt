@@ -12,7 +12,7 @@ pub fn JsonChatToolCall::new(
   name : String,
   arguments : Json,
 ) -> JsonChatToolCall {
-  { id, name, arguments }
+  { id, name, arguments, }
 }
 
 ///|
@@ -29,7 +29,7 @@ pub fn JsonChatResponse::new(
   tool_calls : Array[JsonChatToolCall],
   reasoning_content : String?,
 ) -> JsonChatResponse {
-  { content, tool_calls, reasoning_content }
+  { content, tool_calls, reasoning_content, }
 }
 
 ///|
@@ -37,17 +37,17 @@ pub fn JsonChatResponse::new(
 pub(all) struct JsonChatLoopResult {
   final_content : String
   messages : Array[Json]
-  iterations : Int
+  iterations : Int32
 }
 
 ///|
-pub fn run_json_chat_loop(
+pub async fn run_json_chat_loop(
   messages : Array[Json],
   tools : Array[Json],
-  max_iterations : Int,
-  chat : (Array[Json], Array[Json]) -> JsonChatResponse,
+  max_iterations : Int32,
+  chat : async (Array[Json], Array[Json]) -> JsonChatResponse,
   execute_tool : (String, Json) -> String,
-  fallback_content? : String = "I've completed processing but have no response to give.",
+  fallback_content~ : String = "I've completed processing but have no response to give.",
 ) -> JsonChatLoopResult {
   let current_messages = messages
   let mut iteration = 0
@@ -88,8 +88,8 @@ fn build_assistant_message(
   reasoning_content : String?,
 ) -> Json {
   let msg : Map[String, Json] = Map([])
-  msg["role"] = "assistant".to_json()
-  msg["content"] = content.to_json()
+  msg["role"] = ToJson::to_json("assistant")
+  msg["content"] = ToJson::to_json(content)
   if !tool_calls.is_empty() {
     let arr : Array[Json] = []
     for tc in tool_calls {
@@ -100,7 +100,7 @@ fn build_assistant_message(
   match reasoning_content {
     Some(reasoning) =>
       if !reasoning.is_empty() {
-        msg["reasoning_content"] = reasoning.to_json()
+        msg["reasoning_content"] = ToJson::to_json(reasoning)
       }
     None => ()
   }
@@ -114,21 +114,21 @@ fn build_tool_result_message(
   result : String,
 ) -> Json {
   {
-    "role": "tool".to_json(),
-    "tool_call_id": tool_call_id.to_json(),
-    "name": tool_name.to_json(),
-    "content": result.to_json(),
+    "role": ToJson::to_json("tool"),
+    "tool_call_id": ToJson::to_json(tool_call_id),
+    "name": ToJson::to_json(tool_name),
+    "content": ToJson::to_json(result),
   }
 }
 
 ///|
 fn tool_call_to_openai_json(tc : JsonChatToolCall) -> Json {
   {
-    "id": tc.id.to_json(),
-    "type": "function".to_json(),
+    "id": ToJson::to_json(tc.id),
+    "type": ToJson::to_json("function"),
     "function": {
-      "name": tc.name.to_json(),
-      "arguments": tc.arguments.stringify().to_json(),
+      "name": ToJson::to_json(tc.name),
+      "arguments": ToJson::to_json(tc.arguments.stringify()),
     },
   }
 }

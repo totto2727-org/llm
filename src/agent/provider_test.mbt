@@ -41,7 +41,7 @@ impl @llm.Provider for CaptureProvider with fn name(_self) -> String {
 }
 
 ///|
-test "llm_chat_provider converts messages and tools" {
+async test "llm_chat_provider converts messages and tools" {
   let provider : CaptureProvider = {
     received_messages: [],
     received_tools: [],
@@ -53,38 +53,35 @@ test "llm_chat_provider converts messages and tools" {
   }
   let adapter = llm_chat_provider(provider)
   let messages : Array[Json] = [
-    { "role": "system".to_json(), "content": "SYS".to_json() },
-    { "role": "user".to_json(), "content": "U".to_json() },
+    { "role": "system", "content": "SYS" },
+    { "role": "user", "content": "U" },
     {
-      "role": "assistant".to_json(),
-      "content": "".to_json(),
+      "role": "assistant",
+      "content": "",
       "tool_calls": Json::array([
         {
-          "id": "c1".to_json(),
-          "type": "function".to_json(),
-          "function": {
-            "name": "echo".to_json(),
-            "arguments": "{\"text\":\"hi\"}".to_json(),
-          },
+          "id": "c1",
+          "type": "function",
+          "function": { "name": "echo", "arguments": "{\"text\":\"hi\"}" },
         },
       ]),
     },
     {
-      "role": "tool".to_json(),
-      "tool_call_id": "c1".to_json(),
-      "name": "echo".to_json(),
-      "content": "ECHO:hi".to_json(),
+      "role": "tool",
+      "tool_call_id": "c1",
+      "name": "echo",
+      "content": "ECHO:hi",
     },
   ]
   let tools : Array[Json] = [
     {
-      "type": "function".to_json(),
+      "type": "function",
       "function": {
-        "name": "echo".to_json(),
-        "description": "echo text".to_json(),
+        "name": "echo",
+        "description": "echo text",
         "parameters": {
-          "type": "object".to_json(),
-          "properties": { "text": { "type": "string".to_json() } },
+          "type": "object",
+          "properties": { "text": { "type": "string" } },
         },
       },
     },
@@ -109,15 +106,13 @@ test "llm_chat_provider converts messages and tools" {
 }
 
 ///|
-test "llm_chat_provider maps tool calls from llm collect" {
+async test "llm_chat_provider maps tool calls from llm collect" {
   let provider : CaptureProvider = {
     received_messages: [],
     received_tools: [],
     emit_events: [
       @llm.MessageStart,
-      @llm.ToolCallEnd(id="call_1", name="read_file", input={
-        "path": "a.txt".to_json(),
-      }),
+      @llm.ToolCallEnd(id="call_1", name="read_file", input={ "path": "a.txt" }),
       @llm.MessageEnd(finish_reason=@llm.ToolUse, usage=None),
     ],
   }

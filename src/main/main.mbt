@@ -2,7 +2,7 @@
 /// MockProvider that replays pre-defined SSE event sequences.
 priv struct MockProvider {
   responses : Array[Array[@llm.StreamEvent]]
-  mut call_count : Int
+  mut call_count : Int32
 }
 
 ///|
@@ -27,7 +27,7 @@ impl @llm.Provider for MockProvider with fn name(_self) -> String {
 }
 
 ///|
-fn main {
+async fn main {
   println("=== Mock SSE Stream Debug ===")
   println("")
   // Test 1: Simple text streaming
@@ -52,7 +52,7 @@ fn main {
 }
 
 ///|
-fn test_text_stream() -> Unit raise {
+async fn test_text_stream() -> Unit {
   let provider : MockProvider = {
     responses: [
       [
@@ -62,17 +62,17 @@ fn test_text_stream() -> Unit raise {
         @llm.StreamEvent::TextDelta("world!"),
         @llm.StreamEvent::MessageEnd(
           finish_reason=@llm.FinishReason::Stop,
-          usage=Some(@llm.Usage::{ input_tokens: 10, output_tokens: 3 }),
+          usage=Some(@llm.Usage::{ input_tokens: 10, output_tokens: 3, }),
         ),
       ],
     ],
     call_count: 0,
   }
   let events : Array[String] = []
-  let text_buf = StringBuilder::new()
+  let text_buf = StringBuilder::StringBuilder()
   let handler : @llm.StreamHandler = {
     on_event: fn(event) {
-      events.push(event.to_string())
+      events.push(Show::to_string(event))
       match event {
         @llm.StreamEvent::TextDelta(s) => text_buf.write_string(s)
         _ => ()
@@ -94,10 +94,10 @@ fn test_text_stream() -> Unit raise {
 }
 
 ///|
-fn test_tool_call_stream() -> Unit raise {
+async fn test_tool_call_stream() -> Unit {
   let tool_input : Json = {
-    "location": "Tokyo".to_json(),
-    "unit": "celsius".to_json(),
+    "location": ToJson::to_json("Tokyo"),
+    "unit": ToJson::to_json("celsius"),
   }
   let provider : MockProvider = {
     responses: [
@@ -119,7 +119,7 @@ fn test_tool_call_stream() -> Unit raise {
         ),
         @llm.StreamEvent::MessageEnd(
           finish_reason=@llm.FinishReason::ToolUse,
-          usage=Some(@llm.Usage::{ input_tokens: 20, output_tokens: 15 }),
+          usage=Some(@llm.Usage::{ input_tokens: 20, output_tokens: 15, }),
         ),
       ],
     ],
@@ -128,10 +128,10 @@ fn test_tool_call_stream() -> Unit raise {
   let tool_calls : Array[@llm.ToolCall] = []
   let handler : @llm.StreamHandler = {
     on_event: fn(event) {
-      println("  [event] " + event.to_string())
+      println("  [event] " + Show::to_string(event))
       match event {
         @llm.StreamEvent::ToolCallEnd(id~, name~, input~) =>
-          tool_calls.push({ id, name, input })
+          tool_calls.push({ id, name, input, })
         _ => ()
       }
     },
@@ -154,7 +154,7 @@ fn test_tool_call_stream() -> Unit raise {
 }
 
 ///|
-fn test_agent_loop() -> Unit raise {
+async fn test_agent_loop() -> Unit {
   let provider : MockProvider = {
     responses: [
       // Step 0: model calls get_weather tool
@@ -162,7 +162,7 @@ fn test_agent_loop() -> Unit raise {
         @llm.StreamEvent::MessageStart,
         @llm.StreamEvent::ToolCallStart(id="call_1", name="get_weather"),
         @llm.StreamEvent::ToolCallEnd(id="call_1", name="get_weather", input={
-          "city": "Tokyo".to_json(),
+          "city": ToJson::to_json("Tokyo"),
         }),
         @llm.StreamEvent::MessageEnd(
           finish_reason=@llm.FinishReason::ToolUse,
@@ -175,7 +175,7 @@ fn test_agent_loop() -> Unit raise {
         @llm.StreamEvent::TextDelta("It's 25°C in Tokyo."),
         @llm.StreamEvent::MessageEnd(
           finish_reason=@llm.FinishReason::Stop,
-          usage=Some(@llm.Usage::{ input_tokens: 50, output_tokens: 10 }),
+          usage=Some(@llm.Usage::{ input_tokens: 50, output_tokens: 10, }),
         ),
       ],
     ],
@@ -200,7 +200,7 @@ fn test_agent_loop() -> Unit raise {
     @llm.MaxSteps(5),
     fn(e) {
       let s = match e {
-        @llm.AgentEvent::Stream(evt) => "[stream] " + evt.to_string()
+        @llm.AgentEvent::Stream(evt) => "[stream] " + Show::to_string(evt)
         @llm.AgentEvent::ToolExecute(name~, input~) =>
           "[tool:exec] " + name + " " + input.stringify()
         @llm.AgentEvent::ToolResult(name~, result~, ..) =>

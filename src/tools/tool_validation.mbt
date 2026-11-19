@@ -260,7 +260,7 @@ fn schema_number_field(obj : Json, key : String) -> Double? {
 }
 
 ///|
-fn schema_int_field(obj : Json, key : String) -> Int? {
+fn schema_int_field(obj : Json, key : String) -> Int32? {
   match schema_number_field(obj, key) {
     Some(n) => Some(n.to_int())
     None => None
@@ -305,7 +305,7 @@ fn dot_path(path : String, key : String) -> String {
 }
 
 ///|
-fn index_path(path : String, index : Int) -> String {
+fn index_path(path : String, index : Int32) -> String {
   if path.is_empty() {
     "[" + index.to_string() + "]"
   } else {

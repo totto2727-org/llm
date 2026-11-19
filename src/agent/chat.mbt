@@ -10,10 +10,10 @@ pub fn add_tool_result(
 ) -> Array[Json] {
   let out = messages
   out.push({
-    "role": "tool".to_json(),
-    "tool_call_id": tool_call_id.to_json(),
-    "name": tool_name.to_json(),
-    "content": result.to_json(),
+    "role": ToJson::to_json("tool"),
+    "tool_call_id": ToJson::to_json(tool_call_id),
+    "name": ToJson::to_json(tool_name),
+    "content": ToJson::to_json(result),
   })
   out
 }
@@ -27,10 +27,10 @@ pub fn add_assistant_message(
 ) -> Array[Json] {
   let out = messages
   let msg : Map[String, Json] = Map([])
-  msg["role"] = "assistant".to_json()
+  msg["role"] = ToJson::to_json("assistant")
   msg["content"] = match content {
-    Some(text) => text.to_json()
-    None => "".to_json()
+    Some(text) => ToJson::to_json(text)
+    None => ToJson::to_json("")
   }
   match tool_calls {
     Some(calls) =>
@@ -42,7 +42,7 @@ pub fn add_assistant_message(
   match reasoning_content {
     Some(reasoning) =>
       if !reasoning.is_empty() {
-        msg["reasoning_content"] = reasoning.to_json()
+        msg["reasoning_content"] = ToJson::to_json(reasoning)
       }
     None => ()
   }

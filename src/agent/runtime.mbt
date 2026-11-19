@@ -2,10 +2,11 @@
 /// Route-free runtime turn core.
 
 ///|
+#derive(Eq)
 pub(all) enum RuntimeTurnKind {
   UserInbound
   SystemInbound
-} derive(Eq)
+}
 
 ///|
 pub struct RuntimeTurnRequest {
@@ -26,9 +27,9 @@ pub fn RuntimeTurnRequest::new(
   chat_id : String,
   sender_id : String,
   content : String,
-  metadata? : Map[String, Json] = Map([]),
+  metadata~ : Map[String, Json] = Map([]),
 ) -> RuntimeTurnRequest {
-  { kind, session_key, channel, chat_id, sender_id, content, metadata }
+  { kind, session_key, channel, chat_id, sender_id, content, metadata, }
 }
 
 ///|
@@ -40,10 +41,10 @@ pub struct RuntimeTurnResult {
 }
 
 ///|
-pub fn run_runtime_turn(
+pub async fn run_runtime_turn(
   sessions : SessionManager,
   request : RuntimeTurnRequest,
-  run_loop : (Array[Json], String, String, String) -> String,
+  run_loop : async (Array[Json], String, String, String) -> String,
 ) -> RuntimeTurnResult {
   let session = sessions.get_or_create(request.session_key)
   let reply = run_loop(

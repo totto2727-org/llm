@@ -3,12 +3,12 @@
 ///|
 pub struct MockProvider {
   responses : Array[Array[StreamEvent]]
-  mut call_count : Int
+  mut call_count : Int32
 }
 
 ///|
 pub fn MockProvider::new(responses : Array[Array[StreamEvent]]) -> MockProvider {
-  { responses, call_count: 0 }
+  { responses, call_count: 0, }
 }
 
 ///|

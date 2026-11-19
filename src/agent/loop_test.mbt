@@ -39,10 +39,10 @@ fn has_tool_result(
 }
 
 ///|
-test "run_agent_loop returns direct response without tools" {
+async test "run_agent_loop returns direct response without tools" {
   let calls = Ref(0)
   let result = run_agent_loop(
-    [{ "role": "user".to_json(), "content": "hello".to_json() }],
+    [{ "role": "user", "content": "hello" }],
     [],
     "dummy-model",
     5,
@@ -58,21 +58,21 @@ test "run_agent_loop returns direct response without tools" {
 }
 
 ///|
-test "run_agent_loop executes tool call and continues" {
+async test "run_agent_loop executes tool call and continues" {
   let calls = Ref(0)
   let saw_tool_result = Ref(false)
   let result = run_agent_loop(
-    [{ "role": "user".to_json(), "content": "echo hi".to_json() }],
+    [{ "role": "user", "content": "echo hi" }],
     [
       {
-        "type": "function".to_json(),
+        "type": "function",
         "function": {
-          "name": "echo".to_json(),
-          "description": "echo text".to_json(),
+          "name": "echo",
+          "description": "echo text",
           "parameters": {
-            "type": "object".to_json(),
-            "properties": { "text": { "type": "string".to_json() } },
-            "required": Json::array(["text".to_json()]),
+            "type": "object",
+            "properties": { "text": { "type": "string" } },
+            "required": ["text"],
           },
         },
       },
@@ -84,7 +84,7 @@ test "run_agent_loop executes tool call and continues" {
         calls.val = 1
         LoopResponse::new(
           "",
-          [LoopToolCall::new("call_1", "echo", { "text": "hi".to_json() })],
+          [LoopToolCall::new("call_1", "echo", { "text": "hi" })],
           None,
         )
       } else {
@@ -109,16 +109,16 @@ test "run_agent_loop executes tool call and continues" {
 }
 
 ///|
-test "run_agent_loop returns fallback when max_iterations exceeded" {
+async test "run_agent_loop returns fallback when max_iterations exceeded" {
   let result = run_agent_loop(
-    [{ "role": "user".to_json(), "content": "loop".to_json() }],
+    [{ "role": "user", "content": "loop" }],
     [],
     "dummy-model",
     1,
     fn(_messages, _tools, _model) {
       LoopResponse::new(
         "",
-        [LoopToolCall::new("call_1", "echo", { "text": "hi".to_json() })],
+        [LoopToolCall::new("call_1", "echo", { "text": "hi" })],
         None,
       )
     },
@@ -132,14 +132,14 @@ test "run_agent_loop returns fallback when max_iterations exceeded" {
 }
 
 ///|
-test "run_agent_loop_with_provider works with callback provider" {
+async test "run_agent_loop_with_provider works with callback provider" {
   let calls = Ref(0)
   let provider = callback_chat_provider(fn(_messages, _tools, _model) {
     calls.val = calls.val + 1
     LoopResponse::new("from-provider", [], None)
   })
   let result = run_agent_loop_with_provider(
-    [{ "role": "user".to_json(), "content": "hello".to_json() }],
+    [{ "role": "user", "content": "hello" }],
     [],
     provider,
     "dummy-model",

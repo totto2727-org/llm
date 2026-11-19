@@ -9,7 +9,7 @@ pub struct SkillsLoader {
 
 ///|
 pub fn SkillsLoader::new() -> SkillsLoader {
-  { workspace_skills: {}, builtin_skills: {} }
+  { workspace_skills: {}, builtin_skills: {}, }
 }
 
 ///|
@@ -17,7 +17,7 @@ pub fn SkillsLoader::register_workspace_skill(
   self : SkillsLoader,
   name : String,
   content : String,
-  path? : String = "",
+  path~ : String = "",
 ) -> Unit {
   let skill_path = if path.is_empty() {
     "skills/" + name + "/SKILL.md"
@@ -34,7 +34,7 @@ pub fn SkillsLoader::register_builtin_skill(
   self : SkillsLoader,
   name : String,
   content : String,
-  path? : String = "",
+  path~ : String = "",
 ) -> Unit {
   let skill_path = if path.is_empty() {
     "builtin/skills/" + name + "/SKILL.md"
@@ -49,9 +49,9 @@ pub fn SkillsLoader::register_builtin_skill(
 ///|
 pub fn SkillsLoader::list_skills(
   self : SkillsLoader,
-  filter_unavailable? : Bool = true,
-  bins? : Map[String, Bool] = Map([]),
-  env? : Map[String, String] = Map([]),
+  filter_unavailable~ : Bool = true,
+  bins~ : Map[String, Bool] = Map([]),
+  env~ : Map[String, String] = Map([]),
 ) -> Array[SkillInfo] {
   let out : Array[SkillInfo] = []
   for entry in self.workspace_skills.to_array() {
@@ -108,8 +108,8 @@ pub fn SkillsLoader::load_skills_for_context(
 ///|
 pub fn SkillsLoader::build_skills_summary(
   self : SkillsLoader,
-  bins? : Map[String, Bool] = Map([]),
-  env? : Map[String, String] = Map([]),
+  bins~ : Map[String, Bool] = Map([]),
+  env~ : Map[String, String] = Map([]),
 ) -> String {
   let all = self.list_skills(filter_unavailable=false, bins~, env~)
   if all.is_empty() {
@@ -140,8 +140,8 @@ pub fn SkillsLoader::build_skills_summary(
 ///|
 pub fn SkillsLoader::get_always_skills(
   self : SkillsLoader,
-  bins? : Map[String, Bool] = Map([]),
-  env? : Map[String, String] = Map([]),
+  bins~ : Map[String, Bool] = Map([]),
+  env~ : Map[String, String] = Map([]),
 ) -> Array[String] {
   let out : Array[String] = []
   for skill in self.list_skills(filter_unavailable=true, bins~, env~) {

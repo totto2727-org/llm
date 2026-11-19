@@ -11,10 +11,10 @@ fn chat_test_get_string_field(obj : Json, key : String) -> String {
 }
 
 ///|
-test "run_json_chat_loop returns direct response without tools" {
+async test "run_json_chat_loop returns direct response without tools" {
   let calls = Ref(0)
   let result = run_json_chat_loop(
-    [{ "role": "user".to_json(), "content": "hello".to_json() }],
+    [{ "role": "user", "content": "hello" }],
     [],
     5,
     fn(_messages, _tools) {
@@ -29,19 +29,19 @@ test "run_json_chat_loop returns direct response without tools" {
 }
 
 ///|
-test "run_json_chat_loop executes tool call and appends tool result messages" {
+async test "run_json_chat_loop executes tool call and appends tool result messages" {
   let calls = Ref(0)
   let seen_tool_result = Ref(false)
   let result = run_json_chat_loop(
-    [{ "role": "user".to_json(), "content": "hi".to_json() }],
-    [{ "type": "function".to_json() }],
+    [{ "role": "user", "content": "hi" }],
+    [{ "type": "function" }],
     5,
     fn(messages, _tools) {
       if calls.val == 0 {
         calls.val = 1
         JsonChatResponse::new(
           "",
-          [JsonChatToolCall::new("call_1", "echo", { "text": "x".to_json() })],
+          [JsonChatToolCall::new("call_1", "echo", { "text": "x" })],
           None,
         )
       } else {
@@ -69,9 +69,9 @@ test "run_json_chat_loop executes tool call and appends tool result messages" {
 }
 
 ///|
-test "run_json_chat_loop returns fallback on max iterations" {
+async test "run_json_chat_loop returns fallback on max iterations" {
   let result = run_json_chat_loop(
-    [{ "role": "user".to_json(), "content": "loop".to_json() }],
+    [{ "role": "user", "content": "loop" }],
     [],
     1,
     fn(_messages, _tools) {

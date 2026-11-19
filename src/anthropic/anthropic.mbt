@@ -6,12 +6,12 @@ pub struct AnthropicProvider {
 ///|
 pub fn AnthropicProvider::new(
   api_key : String,
-  model? : String = "claude-sonnet-4-20250514",
-  max_tokens? : Int = 4096,
-  system_prompt? : String = "",
-  base_url? : String = "https://api.anthropic.com",
-  timeout_sec? : Int = 300,
-  max_retries? : Int = 3,
+  model~ : String = "claude-sonnet-4-20250514",
+  max_tokens~ : Int32 = 4096,
+  system_prompt~ : String = "",
+  base_url~ : String = "https://api.anthropic.com",
+  timeout_sec~ : Int32 = 300,
+  max_retries~ : Int32 = 3,
 ) -> AnthropicProvider {
   {
     config: @llm.ProviderConfig::new(
@@ -29,26 +29,26 @@ pub fn AnthropicProvider::new(
 ///|
 fn build_anthropic_headers(api_key : String) -> Json {
   {
-    "Content-Type": "application/json".to_json(),
-    "x-api-key": api_key.to_json(),
-    "anthropic-version": "2023-06-01".to_json(),
+    "Content-Type": ToJson::to_json("application/json"),
+    "x-api-key": ToJson::to_json(api_key),
+    "anthropic-version": ToJson::to_json("2023-06-01"),
   }
 }
 
 ///|
 fn build_anthropic_body(
   model : String,
-  max_tokens : Int,
+  max_tokens : Int32,
   system_prompt : String,
   messages : Array[@llm.Message],
   tools : Array[@llm.ToolDef],
 ) -> Json {
   let body : Map[String, Json] = Map([])
-  body["model"] = model.to_json()
+  body["model"] = ToJson::to_json(model)
   body["max_tokens"] = Json::number(max_tokens.to_double())
   body["stream"] = Json::boolean(true)
   if !system_prompt.is_empty() {
-    body["system"] = system_prompt.to_json()
+    body["system"] = ToJson::to_json(system_prompt)
   }
   let msgs : Array[Json] = []
   for msg in messages {
@@ -73,7 +73,7 @@ fn get_str(j : Json, field : String, default : String) -> String {
 }
 
 ///|
-fn get_int(j : Json, field : String, default : Int) -> Int {
+fn get_int(j : Json, field : String, default : Int32) -> Int32 {
   match @llm.json_get_int(j, field) {
     Some(n) => n
     None => default
@@ -132,7 +132,7 @@ pub fn parse_anthropic_event(data : String) -> @llm.StreamEvent? {
             Some(u) => {
               let input_tokens = get_int(u, "input_tokens", 0)
               let output_tokens = get_int(u, "output_tokens", 0)
-              Some(@llm.Usage::{ input_tokens, output_tokens })
+              Some(@llm.Usage::{ input_tokens, output_tokens, })
             }
             None => None
           }
@@ -170,7 +170,6 @@ pub impl @llm.Provider for AnthropicProvider with fn stream(
   let active_tools : Map[String, (String, StringBuilder)] = Map([])
   @ffi.fetch_sse(
     url,
-    "POST",
     headers.stringify(),
     body.stringify(),
     self.config.timeout_sec,
@@ -179,7 +178,7 @@ pub impl @llm.Provider for AnthropicProvider with fn stream(
         Some(event) =>
           match event {
             @llm.StreamEvent::ToolCallStart(id~, name~) => {
-              active_tools[id] = (name, StringBuilder::new())
+              active_tools[id] = (name, StringBuilder::StringBuilder())
               (handler.on_event)(event)
             }
             @llm.StreamEvent::ToolCallDelta(input_delta~, ..) => {

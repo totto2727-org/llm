@@ -1,7 +1,7 @@
 ///|
 /// StopCondition controls when the agent loop should stop.
 pub(all) enum StopCondition {
-  MaxSteps(Int)
+  MaxSteps(Int32)
   OnFinish
 }
 
@@ -11,13 +11,13 @@ pub(all) enum AgentEvent {
   Stream(StreamEvent)
   ToolExecute(name~ : String, input~ : Json)
   ToolResult(name~ : String, result~ : String, is_error~ : Bool)
-  StepComplete(step~ : Int)
+  StepComplete(step~ : Int32)
   Done(reason~ : String)
 }
 
 ///|
 /// run_agent executes a tool loop with the given provider and tools.
-pub fn run_agent(
+pub async fn run_agent(
   provider : BoxedProvider,
   registry : ToolRegistry,
   messages : Array[Message],
@@ -35,7 +35,7 @@ pub fn run_agent(
       break
     }
     // Collect events from this step
-    let text_buf = StringBuilder::new()
+    let text_buf = StringBuilder::StringBuilder()
     let pending_tool_calls : Array[ToolCall] = []
     let finish_reason : Ref[FinishReason] = Ref(Stop)
     let handler : StreamHandler = {
@@ -44,7 +44,7 @@ pub fn run_agent(
         match event {
           TextDelta(s) => text_buf.write_string(s)
           ToolCallEnd(id~, name~, input~) =>
-            pending_tool_calls.push({ id, name, input })
+            pending_tool_calls.push({ id, name, input, })
           MessageEnd(finish_reason=fr, ..) => finish_reason.val = fr
           _ => ()
         }
@@ -61,7 +61,7 @@ pub fn run_agent(
       assistant_content.push(ToolUse(id=tc.id, name=tc.name, input=tc.input))
     }
     if !assistant_content.is_empty() {
-      messages.push({ role: Assistant, content: assistant_content })
+      messages.push({ role: Assistant, content: assistant_content, })
     }
     // If no tool calls, we're done
     if pending_tool_calls.is_empty() {

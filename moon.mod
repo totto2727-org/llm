@@ -1,21 +1,23 @@
-name = "mizchi/llm"
+name = "totto2727/llm"
 
-version = "0.3.2"
+version = "0.3.3"
 
 import {
-  "mizchi/x@0.5.3",
-  "moonbitlang/async@0.20.5",
+  "mizchi/x@0.8.0",
+  "moonbitlang/async@0.22.9",
 }
 
 source = "src"
 
 preferred_target = "js"
 
+supported_targets = "js+native+wasm"
+
 readme = "README.mbt.md"
 
-repository = "https://github.com/mizchi/llm"
+repository = "https://github.com/totto2727-org/llm"
 
-license = "MIT"
+license = "Apache-2.0"
 
 keywords = [ "llm", "ai", "client" ]
 

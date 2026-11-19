@@ -2,7 +2,7 @@
 /// Provider is the core trait for LLM providers.
 pub(open) trait Provider {
   /// Send a streaming request to the LLM.
-  fn stream(Self, Array[Message], Array[ToolDef], StreamHandler) -> Unit
+  async fn stream(Self, Array[Message], Array[ToolDef], StreamHandler) -> Unit
   /// Get the provider name.
   fn name(Self) -> String
 }
@@ -15,11 +15,11 @@ pub struct BoxedProvider {
 
 ///|
 pub fn BoxedProvider::new(provider : &Provider) -> BoxedProvider {
-  { inner: provider }
+  { inner: provider, }
 }
 
 ///|
-pub fn BoxedProvider::stream(
+pub async fn BoxedProvider::stream(
   self : BoxedProvider,
   messages : Array[Message],
   tools : Array[ToolDef],
@@ -38,12 +38,12 @@ pub fn BoxedProvider::name(self : BoxedProvider) -> String {
 pub(all) struct ProviderConfig {
   api_key : String
   model : String
-  max_tokens : Int
+  max_tokens : Int32
   system_prompt : String
   base_url : String
-  timeout_sec : Int
-  max_retries : Int
-  retry_delay_ms : Int
+  timeout_sec : Int32
+  max_retries : Int32
+  retry_delay_ms : Int32
 }
 
 ///|
@@ -52,11 +52,11 @@ pub fn ProviderConfig::new(
   api_key : String,
   model : String,
   base_url : String,
-  max_tokens? : Int = 4096,
-  system_prompt? : String = "",
-  timeout_sec? : Int = 300,
-  max_retries? : Int = 3,
-  retry_delay_ms? : Int = 1000,
+  max_tokens~ : Int32 = 4096,
+  system_prompt~ : String = "",
+  timeout_sec~ : Int32 = 300,
+  max_retries~ : Int32 = 3,
+  retry_delay_ms~ : Int32 = 1000,
 ) -> ProviderConfig {
   {
     api_key,
@@ -72,12 +72,12 @@ pub fn ProviderConfig::new(
 
 ///|
 /// Collect all text from a streaming provider call into a single string.
-pub fn collect_text(
+pub async fn collect_text(
   provider : &Provider,
   messages : Array[Message],
-  tools? : Array[ToolDef] = [],
+  tools~ : Array[ToolDef] = [],
 ) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder::StringBuilder()
   let handler : StreamHandler = {
     on_event: fn(event) {
       match event {
@@ -101,20 +101,20 @@ pub(all) struct CollectResult {
 
 ///|
 /// Collect full response including text, tool calls, finish reason, and usage.
-pub fn collect(
+pub async fn collect(
   provider : &Provider,
   messages : Array[Message],
-  tools? : Array[ToolDef] = [],
+  tools~ : Array[ToolDef] = [],
 ) -> CollectResult {
-  let text_buf = StringBuilder::new()
+  let text_buf = StringBuilder::StringBuilder()
   let tool_calls : Array[ToolCall] = []
-  let finish_reason : Ref[FinishReason] = { val: Stop }
-  let usage : Ref[Usage?] = { val: None }
+  let finish_reason : Ref[FinishReason] = { val: Stop, }
+  let usage : Ref[Usage?] = { val: None, }
   let handler : StreamHandler = {
     on_event: fn(event) {
       match event {
         TextDelta(s) => text_buf.write_string(s)
-        ToolCallEnd(id~, name~, input~) => tool_calls.push({ id, name, input })
+        ToolCallEnd(id~, name~, input~) => tool_calls.push({ id, name, input, })
         MessageEnd(finish_reason=fr, usage=u) => {
           finish_reason.val = fr
           usage.val = u
@@ -134,7 +134,7 @@ pub fn collect(
 
 ///|
 /// Estimate token count for a message (rough: ~4 chars per token).
-pub fn Message::estimate_tokens(self : Message) -> Int {
+pub fn Message::estimate_tokens(self : Message) -> Int32 {
   let text = self.get_text()
   (text.length() + 3) / 4
 }
@@ -144,7 +144,7 @@ pub fn Message::estimate_tokens(self : Message) -> Int {
 /// Keeps system messages and the last N messages within budget.
 pub fn truncate_messages(
   messages : Array[Message],
-  max_tokens : Int,
+  max_tokens : Int32,
 ) -> Array[Message] {
   // Always keep system messages
   let system_msgs : Array[Message] = []

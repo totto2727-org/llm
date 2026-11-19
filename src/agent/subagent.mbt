@@ -21,7 +21,7 @@ pub struct SubagentRunResult {
 ///|
 pub struct SubagentQueue {
   runner : (String) -> Result[String, String]
-  mut id_counter : Int
+  mut id_counter : Int32
   pending : Array[SubagentTask]
 }
 
@@ -29,16 +29,16 @@ pub struct SubagentQueue {
 pub fn SubagentQueue::new(
   runner : (String) -> Result[String, String],
 ) -> SubagentQueue {
-  { runner, id_counter: 0, pending: [] }
+  { runner, id_counter: 0, pending: [], }
 }
 
 ///|
 pub fn SubagentQueue::spawn(
   self : SubagentQueue,
   task : String,
-  label? : String? = None,
-  origin_channel? : String = "cli",
-  origin_chat_id? : String = "direct",
+  label~ : String? = None,
+  origin_channel~ : String = "cli",
+  origin_chat_id~ : String = "direct",
 ) -> String {
   self.id_counter = self.id_counter + 1
   let task_id = "sub-" + self.id_counter.to_string()
@@ -61,7 +61,7 @@ pub fn SubagentQueue::spawn(
 }
 
 ///|
-pub fn SubagentQueue::pending_count(self : SubagentQueue) -> Int {
+pub fn SubagentQueue::pending_count(self : SubagentQueue) -> Int32 {
   self.pending.length()
 }
 
@@ -77,7 +77,7 @@ pub fn SubagentQueue::run_next(self : SubagentQueue) -> SubagentRunResult? {
     Err(err) => ("Error: " + err, false)
   }
   let announcement = build_announce_content(task, result, ok)
-  Some({ task, ok, result, announcement })
+  Some({ task, ok, result, announcement, })
 }
 
 ///|

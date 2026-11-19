@@ -9,10 +9,10 @@ pub struct RuntimeToolContext {
 
 ///|
 pub fn RuntimeToolContext::new(
-  channel? : String = "",
-  chat_id? : String = "",
+  channel~ : String = "",
+  chat_id~ : String = "",
 ) -> RuntimeToolContext {
-  { channel, chat_id }
+  { channel, chat_id, }
 }
 
 ///|
@@ -47,7 +47,7 @@ pub enum CronToolPlan {
     schedule~ : CronSchedule,
     message~ : String,
     channel~ : String,
-    chat_id~ : String
+    chat_id~ : String,
   )
   List
   Remove(job_id~ : String)
@@ -59,22 +59,22 @@ pub fn message_tool_def() -> @llm.ToolDef {
     "message",
     "Send a message to the user. Use this when you want to communicate something.",
     {
-      "type": "object".to_json(),
+      "type": "object",
       "properties": {
         "content": {
-          "type": "string".to_json(),
-          "description": "The message content to send".to_json(),
+          "type": "string",
+          "description": "The message content to send",
         },
         "channel": {
-          "type": "string".to_json(),
-          "description": "Optional: target channel (telegram, discord, etc.)".to_json(),
+          "type": "string",
+          "description": "Optional: target channel (telegram, discord, etc.)",
         },
         "chat_id": {
-          "type": "string".to_json(),
-          "description": "Optional: target chat/user ID".to_json(),
+          "type": "string",
+          "description": "Optional: target chat/user ID",
         },
       },
-      "required": Json::array(["content".to_json()]),
+      "required": ["content"],
     },
   )
 }
@@ -85,18 +85,18 @@ pub fn spawn_tool_def() -> @llm.ToolDef {
     "spawn",
     "Spawn a subagent to handle a task in the background. The subagent will complete the task and report back when done.",
     {
-      "type": "object".to_json(),
+      "type": "object",
       "properties": {
         "task": {
-          "type": "string".to_json(),
-          "description": "The task for the subagent to complete".to_json(),
+          "type": "string",
+          "description": "The task for the subagent to complete",
         },
         "label": {
-          "type": "string".to_json(),
-          "description": "Optional short label for the task (for display)".to_json(),
+          "type": "string",
+          "description": "Optional short label for the task (for display)",
         },
       },
-      "required": Json::array(["task".to_json()]),
+      "required": ["task"],
     },
   )
 }
@@ -107,35 +107,28 @@ pub fn cron_tool_def() -> @llm.ToolDef {
     "cron",
     "Schedule reminders and recurring tasks. Actions: add, list, remove.",
     {
-      "type": "object".to_json(),
+      "type": "object",
       "properties": {
         "action": {
-          "type": "string".to_json(),
-          "enum": Json::array([
-            "add".to_json(),
-            "list".to_json(),
-            "remove".to_json(),
-          ]),
-          "description": "Action to perform".to_json(),
+          "type": "string",
+          "enum": ["add", "list", "remove"],
+          "description": "Action to perform",
         },
         "message": {
-          "type": "string".to_json(),
-          "description": "Reminder message (for add)".to_json(),
+          "type": "string",
+          "description": "Reminder message (for add)",
         },
         "every_seconds": {
-          "type": "integer".to_json(),
-          "description": "Interval in seconds (for recurring tasks)".to_json(),
+          "type": "integer",
+          "description": "Interval in seconds (for recurring tasks)",
         },
         "cron_expr": {
-          "type": "string".to_json(),
-          "description": "Cron expression like '0 9 * * *' (for scheduled tasks)".to_json(),
+          "type": "string",
+          "description": "Cron expression like '0 9 * * *' (for scheduled tasks)",
         },
-        "job_id": {
-          "type": "string".to_json(),
-          "description": "Job ID (for remove)".to_json(),
-        },
+        "job_id": { "type": "string", "description": "Job ID (for remove)" },
       },
-      "required": Json::array(["action".to_json()]),
+      "required": ["action"],
     },
   )
 }
@@ -159,7 +152,7 @@ pub fn resolve_message_tool(
       if channel.is_empty() || chat_id.is_empty() {
         Err("Error: No target channel/chat specified")
       } else {
-        Ok({ channel, chat_id, content: text })
+        Ok({ channel, chat_id, content: text, })
       }
     }
     None => Err("Error: content is required")
@@ -332,7 +325,7 @@ fn fallback_chat_id(chat_id : String) -> String {
 }
 
 ///|
-fn crop_name(text : String, max_len : Int) -> String {
+fn crop_name(text : String, max_len : Int32) -> String {
   if text.length() <= max_len {
     text
   } else {
@@ -358,7 +351,7 @@ fn tool_optional_string(obj : Json, key : String) -> String? {
 }
 
 ///|
-fn tool_optional_int(obj : Json, key : String) -> Int? {
+fn tool_optional_int(obj : Json, key : String) -> Int32? {
   match obj {
     Object(map) =>
       match map.get(key) {

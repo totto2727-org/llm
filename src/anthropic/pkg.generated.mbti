@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/llm/anthropic"
+package "totto2727/llm/anthropic"
 
 import {
-  "mizchi/llm",
-  "mizchi/llm/tools",
+  "totto2727/llm",
+  "totto2727/llm/tools",
 }
 
 // Values
@@ -15,7 +15,7 @@ pub fn parse_anthropic_event(String) -> @llm.StreamEvent?
 pub struct AnthropicProvider {
   config : @llm.ProviderConfig
 }
-pub fn AnthropicProvider::new(String, model? : String, max_tokens? : Int, system_prompt? : String, base_url? : String, timeout_sec? : Int, max_retries? : Int) -> Self
+pub fn AnthropicProvider::new(String, model? : String, max_tokens? : Int32, system_prompt? : String, base_url? : String, timeout_sec? : Int32, max_retries? : Int32) -> Self
 pub impl @llm.Provider for AnthropicProvider
 
 // Type aliases

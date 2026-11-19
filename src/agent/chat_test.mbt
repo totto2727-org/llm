@@ -43,9 +43,7 @@ test "add_tool_result appends tool role payload" {
 
 ///|
 test "add_assistant_message supports optional tool_calls and reasoning" {
-  let tool_calls : Array[Json] = [
-    { "id": "call_1".to_json(), "type": "function".to_json() },
-  ]
+  let tool_calls : Array[Json] = [{ "id": "call_1", "type": "function" }]
   let out = add_assistant_message(
     [],
     Some("hello"),

@@ -12,7 +12,7 @@ test "ContentBlock::to_anthropic_json - Text" {
 ///|
 test "ContentBlock::to_anthropic_json - ToolUse" {
   let block : ContentBlock = ToolUse(id="call_1", name="read_file", input={
-    "path": "foo.txt".to_json(),
+    "path": "foo.txt",
   })
   @debug.debug_inspect(
     block.to_anthropic_json().stringify(),
@@ -77,7 +77,7 @@ test "Message::to_openai_json - tool result" {
 
 ///|
 test "json_get_string" {
-  let j : Json = { "name": "test".to_json(), "value": Json::number(42.0) }
+  let j : Json = { "name": "test", "value": Json::number(42.0) }
   @debug.debug_inspect(json_get_string(j, "name"), content="Some(\"test\")")
   @debug.debug_inspect(json_get_string(j, "value"), content="None")
   @debug.debug_inspect(json_get_string(j, "missing"), content="None")
@@ -85,7 +85,7 @@ test "json_get_string" {
 
 ///|
 test "json_get_int" {
-  let j : Json = { "count": Json::number(42.0), "name": "test".to_json() }
+  let j : Json = { "count": Json::number(42.0), "name": "test" }
   @debug.debug_inspect(json_get_int(j, "count"), content="Some(42)")
   @debug.debug_inspect(json_get_int(j, "name"), content="None")
   @debug.debug_inspect(json_get_int(j, "missing"), content="None")

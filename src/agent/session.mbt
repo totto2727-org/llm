@@ -2,7 +2,7 @@
 /// In-memory session manager extracted from nanobot.
 
 ///|
-fn default_clock_ms() -> Int {
+fn default_clock_ms() -> Int32 {
   0
 }
 
@@ -10,17 +10,17 @@ fn default_clock_ms() -> Int {
 pub struct Session {
   key : String
   mut messages : Array[Json]
-  created_at_ms : Int
-  mut updated_at_ms : Int
+  created_at_ms : Int32
+  mut updated_at_ms : Int32
   metadata : Map[String, Json]
-  clock : () -> Int
+  clock : () -> Int32
 }
 
 ///|
 pub fn Session::new(
   key : String,
-  created_at_ms : Int,
-  clock : () -> Int,
+  created_at_ms : Int32,
+  clock : () -> Int32,
 ) -> Session {
   {
     key,
@@ -40,9 +40,9 @@ pub fn Session::add_message(
 ) -> Unit {
   let now = (self.clock)()
   let msg : Map[String, Json] = Map([])
-  msg["role"] = role.to_json()
-  msg["content"] = content.to_json()
-  msg["timestamp"] = now.to_json()
+  msg["role"] = ToJson::to_json(role)
+  msg["content"] = ToJson::to_json(content)
+  msg["timestamp"] = ToJson::to_json(now)
   self.messages.push(Json::object(msg))
   self.updated_at_ms = now
 }
@@ -50,7 +50,7 @@ pub fn Session::add_message(
 ///|
 pub fn Session::get_history(
   self : Session,
-  max_messages? : Int = 50,
+  max_messages~ : Int32 = 50,
 ) -> Array[Json] {
   let start = if self.messages.length() > max_messages {
     self.messages.length() - max_messages
@@ -68,7 +68,10 @@ pub fn Session::get_history(
       Some(s) => s
       None => ""
     }
-    out.push({ "role": role.to_json(), "content": content.to_json() })
+    out.push({
+      "role": ToJson::to_json(role),
+      "content": ToJson::to_json(content),
+    })
   }
   out
 }
@@ -82,21 +85,21 @@ pub fn Session::clear(self : Session) -> Unit {
 ///|
 pub struct SessionSummary {
   key : String
-  created_at_ms : Int
-  updated_at_ms : Int
+  created_at_ms : Int32
+  updated_at_ms : Int32
 }
 
 ///|
 pub struct SessionManager {
   cache : Map[String, Session]
-  clock : () -> Int
+  clock : () -> Int32
 }
 
 ///|
 pub fn SessionManager::new(
-  clock? : () -> Int = default_clock_ms,
+  clock~ : () -> Int32 = default_clock_ms,
 ) -> SessionManager {
-  { cache: {}, clock }
+  { cache: {}, clock, }
 }
 
 ///|

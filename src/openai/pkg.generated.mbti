@@ -1,14 +1,14 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/llm/openai"
+package "totto2727/llm/openai"
 
 import {
-  "mizchi/llm",
-  "mizchi/llm/ffi",
-  "mizchi/llm/tools",
+  "totto2727/llm",
+  "totto2727/llm/ffi",
+  "totto2727/llm/tools",
 }
 
 // Values
-pub fn list_openrouter_models() -> Array[ModelInfo]
+pub async fn list_openrouter_models() -> Array[ModelInfo]
 
 pub fn parse_openai_event(String) -> @llm.StreamEvent?
 
@@ -18,7 +18,7 @@ pub fn parse_openai_event(String) -> @llm.StreamEvent?
 pub(all) struct ModelInfo {
   id : String
   name : String
-  context_length : Int
+  context_length : Int32
   pricing_prompt : String
   pricing_completion : String
 }
@@ -38,8 +38,8 @@ pub struct OpenAIProvider {
 }
 pub async fn OpenAIProvider::collect_text(Self, Array[@llm.Message], tools? : Array[@tools.ToolDef]) -> String
 pub fn OpenAIProvider::collect_text_async(Self, Array[@llm.Message], tools? : Array[@tools.ToolDef]) -> @ffi.Promise[String]
-pub fn OpenAIProvider::new(String, endpoint? : OpenAIEndpoint, model? : String, max_tokens? : Int, system_prompt? : String, base_url? : String, timeout_sec? : Int, max_retries? : Int) -> Self
-pub fn OpenAIProvider::new_compat(String, String, api_key? : String, max_tokens? : Int, system_prompt? : String, timeout_sec? : Int, max_retries? : Int) -> Self
+pub fn OpenAIProvider::new(String, endpoint? : OpenAIEndpoint, model? : String, max_tokens? : Int32, system_prompt? : String, base_url? : String, timeout_sec? : Int32, max_retries? : Int32) -> Self
+pub fn OpenAIProvider::new_compat(String, String, api_key? : String, max_tokens? : Int32, system_prompt? : String, timeout_sec? : Int32, max_retries? : Int32) -> Self
 pub impl @llm.Provider for OpenAIProvider
 
 // Type aliases

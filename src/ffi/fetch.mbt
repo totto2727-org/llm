@@ -1,127 +1,118 @@
 ///|
-/// Perform an SSE streaming fetch request (synchronous via curl).
-/// headers_json and body are JSON strings.
-/// timeout_sec: 0 means no timeout.
-/// on_line is called for each SSE data line (without "data: " prefix).
-/// on_error is called on error.
-/// on_done is called when the stream is complete.
-pub fn fetch_sse(
+priv suberror HttpTransportError {
+  InvalidHeaders
+  UnexpectedStatus(Int32)
+  UnsupportedMethod(String)
+}
+
+///|
+fn http_headers(
+  json : String,
+) -> Map[@http.CaseInsensitiveString, String] raise {
+  guard @json.parse(json) is Object(entries) else { raise InvalidHeaders }
+  let headers : Map[@http.CaseInsensitiveString, String] = Map([])
+  for name, value in entries {
+    headers[@http.CaseInsensitiveString(name)] = match value {
+      String(value) => value
+      _ => value.stringify()
+    }
+  }
+  headers
+}
+
+///|
+async fn[T] within_http_timeout(timeout_sec : Int32, run : async () -> T) -> T {
+  if timeout_sec <= 0 {
+    run()
+  } else {
+    @async.with_timeout(@cmp.minimum(timeout_sec, 2147483) * 1000, run)
+  }
+}
+
+///|
+/// Read SSE data frames incrementally. Comments and non-data fields are ignored.
+async fn read_sse(client : @http.Client, on_data : (String) -> Unit) -> Unit {
+  let data : Array[String] = []
+  while client.read_until("\n") is Some(line) {
+    let line = line.trim_end(chars="\r").to_owned()
+    if line.is_empty() {
+      if !data.is_empty() {
+        let frame = data.join("\n")
+        if frame == "[DONE]" {
+          return
+        }
+        on_data(frame)
+        data.clear()
+      }
+    } else if line == "data" || line.has_prefix("data:") {
+      let value = if line == "data" { "" } else { line[5:].to_owned() }
+      data.push(
+        if value.has_prefix(" ") {
+          value[1:].to_owned()
+        } else {
+          value
+        },
+      )
+    }
+  }
+}
+
+///|
+/// POST an SSE request and deliver each complete data frame before reading the next one.
+pub async fn fetch_sse(
   url : String,
-  http_method : String,
   headers_json : String,
   body : String,
-  timeout_sec : Int,
+  timeout_sec : Int32,
   on_line : (String) -> Unit,
   on_error : (String) -> Unit,
   on_done : () -> Unit,
 ) -> Unit {
-  let args = build_curl_args(url, http_method, headers_json, body, timeout_sec)
-  let args_json = serialize_string_array(args)
-  let result = run_command("curl", args_json)
-  if result.has_prefix("ERROR:") {
-    on_error(result)
-    return
-  }
-  let lines = split_lines(result)
-  for line in lines {
-    let trimmed = line.trim(chars=" \t\r\n").to_owned()
-    if trimmed.has_prefix("data: ") {
-      let data = trimmed.unsafe_substring(start=6, end=trimmed.length())
-      if data != "[DONE]" {
-        on_line(data)
-      }
+  within_http_timeout(timeout_sec, async fn() {
+    let client = @http.post_stream(url, headers=http_headers(headers_json))
+    defer client.close()
+    client.write(body)
+    let response = client.end_request()
+    if response.code < 200 || response.code >= 300 {
+      raise UnexpectedStatus(response.code)
+    }
+    read_sse(client, on_line)
+  }) catch {
+    UnexpectedStatus(code) => {
+      on_error("HTTP \{code}")
+      return
+    }
+    error => {
+      on_error(@debug.to_string(error))
+      return
     }
   }
   on_done()
 }
 
 ///|
-/// Perform a non-streaming fetch request (synchronous via curl).
-/// Returns the response body as a string.
-/// timeout_sec: 0 means no timeout.
-pub fn fetch(
+/// Perform an async HTTP request with a deadline covering headers and body.
+pub async fn fetch_async(
   url : String,
   http_method : String,
   headers_json : String,
   body : String,
-  timeout_sec : Int,
-  on_result : (String) -> Unit,
-  on_error : (String) -> Unit,
-) -> Unit {
-  let args = build_curl_args(url, http_method, headers_json, body, timeout_sec)
-  let args_json = serialize_string_array(args)
-  let result = run_command("curl", args_json)
-  if result.has_prefix("ERROR:") {
-    on_error(result)
-    return
-  }
-  on_result(result)
+  timeout_sec : Int32,
+) -> (Int32, String) {
+  within_http_timeout(timeout_sec, async fn() {
+    let headers = http_headers(headers_json)
+    let (response, content) = match http_method {
+      "GET" => @http.get(url, headers~)
+      "POST" => @http.post(url, body, headers~)
+      "PUT" => @http.put(url, body, headers~)
+      _ => raise UnsupportedMethod(http_method)
+    }
+    (response.code, content.text())
+  })
 }
 
 ///|
 /// Get an environment variable value. Returns empty string if not found.
 pub fn get_env(name : String) -> String {
   @x_sys.get_env_var(name).unwrap_or("")
-}
-
-///|
-/// Build curl command-line arguments.
-fn build_curl_args(
-  url : String,
-  http_method : String,
-  headers_json : String,
-  body : String,
-  timeout_sec : Int,
-) -> Array[String] {
-  let args : Array[String] = ["-sS", "-X", http_method, url]
-  if timeout_sec > 0 {
-    args.push("--max-time")
-    args.push(timeout_sec.to_string())
-  }
-  // Parse headers JSON and add -H flags
-  let headers = @json.parse(headers_json) catch { _ => Json::null() }
-  match headers {
-    Json::Object(entries) =>
-      for entry in entries {
-        let (key, value) = entry
-        let val_str = match value {
-          Json::String(s) => s
-          _ => value.stringify()
-        }
-        args.push("-H")
-        args.push(key + ": " + val_str)
-      }
-    _ => ()
-  }
-  if !body.is_empty() {
-    args.push("-d")
-    args.push(body)
-  }
-  args
-}
-
-///|
-/// Split a string by newlines.
-fn split_lines(s : String) -> Array[String] {
-  let result : Array[String] = []
-  let buf = StringBuilder::new()
-  for ch in s {
-    if ch == '\n' {
-      result.push(buf.to_string())
-      buf.reset()
-    } else {
-      buf.write_char(ch)
-    }
-  }
-  let last = buf.to_string()
-  if !last.is_empty() {
-    result.push(last)
-  }
-  result
-}
-
-///|
-/// Serialize an array of strings to a JSON array string.
-fn serialize_string_array(arr : Array[String]) -> String {
-  Json::array(arr.map(fn(s) { s.to_json() })).stringify()
 }

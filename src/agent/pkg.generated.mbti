@@ -1,19 +1,20 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/llm/agent"
+package "totto2727/llm/agent"
 
 import {
-  "mizchi/llm",
-  "mizchi/llm/tools",
+  "moonbitlang/core/json",
+  "totto2727/llm",
+  "totto2727/llm/tools",
 }
 
 // Values
-pub fn add_assistant_message(Array[Json], String?, Array[Json]?, String?) -> Array[Json]
+pub fn add_assistant_message(Array[@json.Json], String?, Array[@json.Json]?, String?) -> Array[@json.Json]
 
-pub fn add_tool_result(Array[Json], String, String, String) -> Array[Json]
+pub fn add_tool_result(Array[@json.Json], String, String, String) -> Array[@json.Json]
 
-pub fn callback_chat_provider((Array[Json], Array[Json], String) -> LoopResponse) -> &ChatProvider
+pub fn callback_chat_provider(async (Array[@json.Json], Array[@json.Json], String) -> LoopResponse) -> &ChatProvider
 
-pub fn compute_next_run(CronSchedule, Int) -> Int?
+pub fn compute_next_run(CronSchedule, Int32) -> Int32?
 
 pub fn cron_tool_def() -> @tools.ToolDef
 
@@ -29,17 +30,17 @@ pub fn llm_chat_provider(&@llm.Provider) -> &ChatProvider
 
 pub fn message_tool_def() -> @tools.ToolDef
 
-pub fn resolve_cron_tool(Json, RuntimeToolContext) -> Result[CronToolPlan, String]
+pub fn resolve_cron_tool(@json.Json, RuntimeToolContext) -> Result[CronToolPlan, String]
 
-pub fn resolve_message_tool(Json, RuntimeToolContext) -> Result[MessageToolPlan, String]
+pub fn resolve_message_tool(@json.Json, RuntimeToolContext) -> Result[MessageToolPlan, String]
 
-pub fn resolve_spawn_tool(Json, RuntimeToolContext) -> Result[SpawnToolPlan, String]
+pub fn resolve_spawn_tool(@json.Json, RuntimeToolContext) -> Result[SpawnToolPlan, String]
 
-pub fn run_agent_loop(Array[Json], Array[Json], String, Int, (Array[Json], Array[Json], String) -> LoopResponse, (String, Json) -> String, fallback_content? : String) -> AgentTurnResult
+pub async fn run_agent_loop(Array[@json.Json], Array[@json.Json], String, Int32, async (Array[@json.Json], Array[@json.Json], String) -> LoopResponse, (String, @json.Json) -> String, fallback_content? : String) -> AgentTurnResult
 
-pub fn run_agent_loop_with_provider(Array[Json], Array[Json], &ChatProvider, String, Int, (String, Json) -> String, fallback_content? : String) -> AgentTurnResult
+pub async fn run_agent_loop_with_provider(Array[@json.Json], Array[@json.Json], &ChatProvider, String, Int32, (String, @json.Json) -> String, fallback_content? : String) -> AgentTurnResult
 
-pub fn run_runtime_turn(SessionManager, RuntimeTurnRequest, (Array[Json], String, String, String) -> String) -> RuntimeTurnResult
+pub async fn run_runtime_turn(SessionManager, RuntimeTurnRequest, async (Array[@json.Json], String, String, String) -> String) -> RuntimeTurnResult
 
 pub fn spawn_tool_def() -> @tools.ToolDef
 
@@ -48,8 +49,8 @@ pub fn spawn_tool_def() -> @tools.ToolDef
 // Types and methods
 pub struct AgentTurnResult {
   final_content : String
-  messages : Array[Json]
-  iterations : Int
+  messages : Array[@json.Json]
+  iterations : Int32
 }
 
 pub struct CronJob {
@@ -59,18 +60,18 @@ pub struct CronJob {
   schedule : CronSchedule
   payload : CronPayload
   state : CronJobState
-  created_at_ms : Int
-  mut updated_at_ms : Int
+  created_at_ms : Int32
+  mut updated_at_ms : Int32
   delete_after_run : Bool
 }
 
 pub struct CronJobState {
-  mut next_run_at_ms : Int?
-  mut last_run_at_ms : Int?
+  mut next_run_at_ms : Int32?
+  mut last_run_at_ms : Int32?
   mut last_status : String?
   mut last_error : String?
 }
-pub fn CronJobState::new(Int?) -> Self
+pub fn CronJobState::new(Int32?) -> Self
 
 pub struct CronPayload {
   kind : String
@@ -83,36 +84,37 @@ pub fn CronPayload::agent_turn(String, deliver? : Bool, channel? : String?, to? 
 
 pub struct CronSchedule {
   kind : CronScheduleKind
-  at_ms : Int?
-  every_ms : Int?
+  at_ms : Int32?
+  every_ms : Int32?
   expr : String?
   tz : String?
 }
-pub fn CronSchedule::at(Int) -> Self
+pub fn CronSchedule::at(Int32) -> Self
 pub fn CronSchedule::cron(String, tz? : String?) -> Self
-pub fn CronSchedule::every(Int) -> Self
+pub fn CronSchedule::every(Int32) -> Self
 
+#derive(Eq)
 pub enum CronScheduleKind {
   At
   Every
   Cron
-} derive(Eq)
+}
 
 pub struct CronService {
   jobs : Array[CronJob]
-  clock : () -> Int
+  clock : () -> Int32
   mut on_job : ((CronJob) -> String?)?
-  mut id_counter : Int
+  mut id_counter : Int32
 }
 pub fn CronService::add_job(Self, String, CronSchedule, String, deliver? : Bool, channel? : String?, to? : String?, delete_after_run? : Bool) -> CronJob
 pub fn CronService::enable_job(Self, String, enabled? : Bool) -> CronJob?
 pub fn CronService::list_jobs(Self, include_disabled? : Bool) -> Array[CronJob]
-pub fn CronService::new(clock? : () -> Int, on_job? : ((CronJob) -> String?)?) -> Self
+pub fn CronService::new(clock? : () -> Int32, on_job? : ((CronJob) -> String?)?) -> Self
 pub fn CronService::remove_job(Self, String) -> Bool
-pub fn CronService::run_due(Self) -> Int
+pub fn CronService::run_due(Self) -> Int32
 pub fn CronService::run_job(Self, String, force? : Bool) -> Bool
 pub fn CronService::set_on_job(Self, ((CronJob) -> String?)?) -> Unit
-pub fn CronService::status(Self) -> Map[String, Json]
+pub fn CronService::status(Self) -> Map[String, @json.Json]
 
 pub enum CronToolPlan {
   Add(name~ : String, schedule~ : CronSchedule, message~ : String, channel~ : String, chat_id~ : String)
@@ -130,9 +132,9 @@ pub fn LoopResponse::new(String, Array[LoopToolCall], String?) -> Self
 pub struct LoopToolCall {
   id : String
   name : String
-  arguments : Json
+  arguments : @json.Json
 }
-pub fn LoopToolCall::new(String, String, Json) -> Self
+pub fn LoopToolCall::new(String, String, @json.Json) -> Self
 
 pub struct MessageToolPlan {
   channel : String
@@ -147,10 +149,11 @@ pub struct RuntimeToolContext {
 pub fn RuntimeToolContext::new(channel? : String, chat_id? : String) -> Self
 pub fn RuntimeToolContext::set(Self, String, String) -> Unit
 
+#derive(Eq)
 pub(all) enum RuntimeTurnKind {
   UserInbound
   SystemInbound
-} derive(Eq)
+}
 
 pub struct RuntimeTurnRequest {
   kind : RuntimeTurnKind
@@ -159,44 +162,44 @@ pub struct RuntimeTurnRequest {
   chat_id : String
   sender_id : String
   content : String
-  metadata : Map[String, Json]
+  metadata : Map[String, @json.Json]
 }
-pub fn RuntimeTurnRequest::new(RuntimeTurnKind, String, String, String, String, String, metadata? : Map[String, Json]) -> Self
+pub fn RuntimeTurnRequest::new(RuntimeTurnKind, String, String, String, String, String, metadata? : Map[String, @json.Json]) -> Self
 
 pub struct RuntimeTurnResult {
   channel : String
   chat_id : String
   content : String
-  metadata : Map[String, Json]
+  metadata : Map[String, @json.Json]
 }
 
 pub struct Session {
   key : String
-  mut messages : Array[Json]
-  created_at_ms : Int
-  mut updated_at_ms : Int
-  metadata : Map[String, Json]
-  clock : () -> Int
+  mut messages : Array[@json.Json]
+  created_at_ms : Int32
+  mut updated_at_ms : Int32
+  metadata : Map[String, @json.Json]
+  clock : () -> Int32
 }
 pub fn Session::add_message(Self, String, String) -> Unit
 pub fn Session::clear(Self) -> Unit
-pub fn Session::get_history(Self, max_messages? : Int) -> Array[Json]
-pub fn Session::new(String, Int, () -> Int) -> Self
+pub fn Session::get_history(Self, max_messages? : Int32) -> Array[@json.Json]
+pub fn Session::new(String, Int32, () -> Int32) -> Self
 
 pub struct SessionManager {
   cache : Map[String, Session]
-  clock : () -> Int
+  clock : () -> Int32
 }
 pub fn SessionManager::delete(Self, String) -> Bool
 pub fn SessionManager::get_or_create(Self, String) -> Session
 pub fn SessionManager::list_sessions(Self) -> Array[SessionSummary]
-pub fn SessionManager::new(clock? : () -> Int) -> Self
+pub fn SessionManager::new(clock? : () -> Int32) -> Self
 pub fn SessionManager::save(Self, Session) -> Unit
 
 pub struct SessionSummary {
   key : String
-  created_at_ms : Int
-  updated_at_ms : Int
+  created_at_ms : Int32
+  updated_at_ms : Int32
 }
 
 pub struct SpawnToolPlan {
@@ -208,11 +211,11 @@ pub struct SpawnToolPlan {
 
 pub struct SubagentQueue {
   runner : (String) -> Result[String, String]
-  mut id_counter : Int
+  mut id_counter : Int32
   pending : Array[SubagentTask]
 }
 pub fn SubagentQueue::new((String) -> Result[String, String]) -> Self
-pub fn SubagentQueue::pending_count(Self) -> Int
+pub fn SubagentQueue::pending_count(Self) -> Int32
 pub fn SubagentQueue::run_next(Self) -> SubagentRunResult?
 pub fn SubagentQueue::spawn(Self, String, label? : String?, origin_channel? : String, origin_chat_id? : String) -> String
 
@@ -235,5 +238,5 @@ pub struct SubagentTask {
 
 // Traits
 pub(open) trait ChatProvider {
-  fn chat(Self, Array[Json], Array[Json], String) -> LoopResponse
+  async fn chat(Self, Array[@json.Json], Array[@json.Json], String) -> LoopResponse
 }
