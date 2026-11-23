@@ -4,7 +4,7 @@ version = "0.3.3"
 
 import {
   "mizchi/x@0.8.0",
-  "moonbitlang/async@0.22.9",
+  "moonbitlang/async@0.22.10",
 }
 
 source = "src"
